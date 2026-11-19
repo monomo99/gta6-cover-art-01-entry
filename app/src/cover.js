@@ -62,6 +62,16 @@ export let lastPanels = [];
 /** The title band rectangle drawn, for hit-testing. */
 export let lastBand = null;
 
+/** A hex colour (#rgb or #rrggbb) with a safe alpha — never string-concatenated. */
+export function hexA(hex, alpha) {
+  const m = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(String(hex || '').trim());
+  if (!m) return `rgba(255, 255, 255, ${alpha})`;
+  let h = m[1];
+  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+  const n = parseInt(h, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
 function bandHeight(w, h) {
   return h * (w > h ? 0.26 : w === h ? 0.21 : 0.19);
 }
@@ -139,9 +149,12 @@ function drawPhotoPanel(ctx, panel, photo, grade, noir) {
     const dw = iw * s, dh = ih * s;
     const dx = (panel.w - dw) / 2 + (photo.ox || 0) * panel.w;
     const dy = (panel.h - dh) / 2 + (photo.oy || 0) * panel.h;
+    ctx.save();
+    // A flipped panel mirrors its photo left-to-right, wash and frame untouched.
+    if (photo.flip) { ctx.translate(panel.w, 0); ctx.scale(-1, 1); }
     if (noir) ctx.filter = 'grayscale(1) contrast(1.18) brightness(1.04)';
     ctx.drawImage(photo.img, dx, dy, dw, dh);
-    ctx.filter = 'none';
+    ctx.restore();
   } else {
     // Empty panel: a sunset placeholder so the grid still reads as a poster.
     const ph = ctx.createLinearGradient(0, 0, panel.w, panel.h);
@@ -199,8 +212,8 @@ function drawPalm(ctx, x, y, s, color) {
 function drawStripedSun(ctx, x, y, r, color, skyTop) {
   const glow = ctx.createRadialGradient(x, y, r * 0.2, x, y, r * 2.4);
   glow.addColorStop(0, color);
-  glow.addColorStop(0.35, color + '55');
-  glow.addColorStop(1, color + '00');
+  glow.addColorStop(0.35, hexA(color, 0.33));
+  glow.addColorStop(1, hexA(color, 0));
   ctx.fillStyle = glow;
   ctx.fillRect(x - r * 2.6, y - r * 2.6, r * 5.2, r * 5.2);
   ctx.save();
@@ -239,6 +252,27 @@ function drawSunRays(ctx, x, y, r, color) {
   ctx.restore();
 }
 
+/** A few distant birds: two-stroke chevrons drifting across the sky. */
+function drawBirds(ctx, w, h, color) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(2, w * 0.002);
+  ctx.lineCap = 'round';
+  const birds = [
+    [0.16, 0.14, 1.0], [0.24, 0.10, 0.7], [0.30, 0.17, 0.85],
+    [0.52, 0.08, 0.6], [0.60, 0.13, 0.9], [0.86, 0.11, 0.75],
+  ];
+  for (const [fx, fy, s] of birds) {
+    const x = w * fx, y = h * fy, r = Math.min(w, h) * 0.012 * s;
+    ctx.beginPath();
+    ctx.moveTo(x - r, y);
+    ctx.quadraticCurveTo(x - r * 0.4, y - r * 0.8, x, y);
+    ctx.quadraticCurveTo(x + r * 0.4, y - r * 0.8, x + r, y);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawSky(ctx, w, h, grade) {
   const sky = ctx.createLinearGradient(0, 0, 0, h);
   grade.sky.forEach((c, i) => sky.addColorStop(i / (grade.sky.length - 1), c));
@@ -248,6 +282,7 @@ function drawSky(ctx, w, h, grade) {
   const sunX = w * 0.72, sunY = h * 0.30;
   drawSunRays(ctx, sunX, sunY, sunR, grade.sun);
   drawStripedSun(ctx, sunX, sunY, sunR, grade.sun, grade.sky[0]);
+  drawBirds(ctx, w, h, 'rgba(22,10,36,0.55)');
   // Horizon haze bands.
   ctx.fillStyle = 'rgba(255,255,255,0.07)';
   for (let i = 0; i < 3; i++) ctx.fillRect(0, h * (0.55 + i * 0.05), w, h * 0.012);
@@ -290,6 +325,24 @@ function drawStars(ctx, x, y, size, count, color) {
   ctx.restore();
 }
 
+/** A halftone dot strip across the title band's top, under the neon rule. */
+function drawHalftone(ctx, w, y0, band, color) {
+  const dot = Math.max(2, band * 0.02);
+  const gap = dot * 3.4;
+  const rows = 2;
+  ctx.save();
+  for (let r = 0; r < rows; r++) {
+    const y = y0 + band * 0.055 + r * gap;
+    ctx.fillStyle = hexA(color, 0.5 - r * 0.2);
+    for (let x = gap / 2 + (r % 2) * gap / 2; x < w; x += gap) {
+      ctx.beginPath();
+      ctx.arc(x, y, dot * (1 - r * 0.25), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
 function drawTitleBand(ctx, w, h, state, grade) {
   const band = bandHeight(w, h);
   const y0 = h - band;
@@ -311,6 +364,7 @@ function drawTitleBand(ctx, w, h, state, grade) {
   rule.addColorStop(1, '#00e5ff');
   ctx.fillStyle = rule;
   ctx.fillRect(0, y0, w, Math.max(3, band * 0.03));
+  drawHalftone(ctx, w, y0, band, grade.sun);
 
   const title = (state.title || 'NEON SHORE').trim().toUpperCase();
   const pad = w * 0.045;
@@ -433,5 +487,6 @@ export function drawCover(canvas, state, opts = {}) {
     ctx.fillRect(0, 0, w, h);
     ctx.restore();
   }
-  drawPosterFrame(ctx, w, h);
+  // The poster frame is a cover-level switch: off leaves the art edge to edge.
+  if (state.frame !== false) drawPosterFrame(ctx, w, h);
 }

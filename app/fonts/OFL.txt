@@ -5,7 +5,8 @@ Copyright 2018 The Pacifico Project Authors (https://github.com/googlefonts/Paci
 The three fonts shipped under app/fonts/ (Anton-Regular.ttf, BebasNeue-Regular.ttf,
 Pacifico-Regular.ttf) are each licensed under the SIL Open Font License, Version 1.1,
 copied in full below. This file carries every font's copyright notice, as the license
-requires for a bundled copy.
+requires for a bundled copy. Rewritten for the Neon Shore Cover Studio entry; the
+license text below is unchanged.
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:

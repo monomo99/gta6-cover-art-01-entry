@@ -1,9 +1,10 @@
 // Neon Shore Cover Studio — wires the editor: pick photos, crop and position them per
-// panel, choose a layout, grade and size, letter the caption, export PNGs. A `?shot=`
-// query sets up a fixed scene for a screenshot instead (./shots.js).
+// panel, flip a panel's photo, choose a layout, grade and size, letter the caption,
+// export PNGs. A `?shot=` query sets up a fixed scene for a screenshot instead
+// (./shots.js).
 
 import { drawCover, GRADES, LAYOUTS, SIZES, lastPanels } from './cover.js';
-import { freshState, panelsForLayout, serializeState, restoreState, makeHistory, clampPanelCrop } from './state.js';
+import { freshState, panelsForLayout, serializeState, restoreState, makeHistory, clampPanelCrop, emptyPanel, resetPanelCrop, filledPanelCount } from './state.js';
 import { runShot } from './shots.js';
 
 const canvas = document.getElementById('cover');
@@ -31,6 +32,8 @@ function redraw() {
   $('zoom').value = panel ? String(Math.round((panel.zoom || 1) * 100)) : '100';
   $('zoomLabel').textContent = `${$('zoom').value}%`;
   $('panelLabel').textContent = `Panel ${state.selected + 1} of ${state.panels.length}`;
+  $('flip').classList.toggle('flip-on', !!(panel && panel.flip));
+  $('flip').textContent = panel && panel.flip ? 'Flipped ✓' : 'Flip photo';
 }
 
 function commit() {
@@ -59,7 +62,7 @@ async function resolveSrc(src) {
 
 function setPanelPhoto(index, img, src) {
   history.push(serializeState(state));
-  state.panels[index] = { img, src, zoom: 1, ox: 0, oy: 0 };
+  state.panels[index] = { ...emptyPanel(), img, src };
   redraw();
 }
 
@@ -80,9 +83,18 @@ function fillAllPanels() {
 
 function clearPanel() {
   history.push(serializeState(state));
-  state.panels[state.selected] = { img: null, src: null, zoom: 1, ox: 0, oy: 0 };
+  state.panels[state.selected] = emptyPanel();
   redraw();
   setStatus(`Cleared panel ${state.selected + 1}.`);
+}
+
+function flipPanel() {
+  const panel = state.panels[state.selected];
+  if (!panel || !panel.img) { setStatus('Load a photo into the selected panel first.'); return; }
+  history.push(serializeState(state));
+  panel.flip = !panel.flip;
+  redraw();
+  setStatus(panel.flip ? `Panel ${state.selected + 1} mirrored.` : `Panel ${state.selected + 1} back to normal.`);
 }
 
 function surpriseMe() {
@@ -119,13 +131,18 @@ function exportSize(key, silent) {
   drawCover(off, { ...state, selected: null });
   return new Promise((resolve) => {
     off.toBlob((blob) => {
+      if (!blob) {
+        setStatus('Export failed — the canvas came back empty. Try again.');
+        resolve(false);
+        return;
+      }
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = `neon-shore-${size.w}x${size.h}.png`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 5000);
       if (!silent) setStatus(`Saved neon-shore-${size.w}x${size.h}.png`);
-      resolve();
+      resolve(true);
     }, 'image/png');
   });
 }
@@ -152,6 +169,7 @@ document.querySelectorAll('[data-sample]').forEach((btn) => {
 });
 $('fillAll').addEventListener('click', fillAllPanels);
 $('clearPanel').addEventListener('click', clearPanel);
+$('flip').addEventListener('click', flipPanel);
 $('surprise').addEventListener('click', surpriseMe);
 $('reset').addEventListener('click', resetCover);
 
@@ -193,6 +211,12 @@ $('tagline').addEventListener('input', (e) => { state.tagline = e.target.value; 
 $('heat').addEventListener('input', (e) => { state.heat = Number(e.target.value); redraw(); });
 $('grain').addEventListener('change', (e) => { state.grain = e.target.checked; redraw(); });
 $('vignette').addEventListener('change', (e) => { state.vignette = e.target.checked; redraw(); });
+$('frame').addEventListener('change', (e) => {
+  history.push(serializeState(state));
+  state.frame = e.target.checked;
+  redraw();
+  setStatus(state.frame ? 'Poster frame on.' : 'Poster frame off — edge to edge.');
+});
 $('zoom').addEventListener('input', (e) => {
   const panel = state.panels[state.selected];
   if (!panel) return;
@@ -206,8 +230,9 @@ $('centerPhoto').addEventListener('click', () => {
   const panel = state.panels[state.selected];
   if (!panel) return;
   history.push(serializeState(state));
-  panel.ox = 0; panel.oy = 0; panel.zoom = 1;
+  resetPanelCrop(panel);
   redraw();
+  setStatus(`Panel ${state.selected + 1} re-centred.`);
 });
 
 $('undo').addEventListener('click', async () => {
@@ -238,13 +263,17 @@ function canvasPoint(e) {
   };
 }
 
+function panelAt(p) {
+  return lastPanels.findIndex((r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+}
+
 let dragging = false;
 let dragStart = null;
 let dragPanel = null;
 
 canvas.addEventListener('pointerdown', (e) => {
   const p = canvasPoint(e);
-  const index = lastPanels.findIndex((r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+  const index = panelAt(p);
   if (index < 0) return;
   if (index !== state.selected) {
     state.selected = index;
@@ -284,6 +313,15 @@ canvas.addEventListener('pointerup', () => {
   dragPanel = null;
 });
 
+// Double-click a panel to cycle the selection through the panels.
+canvas.addEventListener('dblclick', (e) => {
+  const index = panelAt(canvasPoint(e));
+  if (index < 0) return;
+  state.selected = (state.selected + 1) % state.panels.length;
+  redraw();
+  setStatus(`Panel ${state.selected + 1} of ${state.panels.length} selected — ${filledPanelCount(state)} filled.`);
+});
+
 // A wheel burst is one undo step: commit once when a burst starts, then zoom freely.
 let lastWheelCommit = 0;
 canvas.addEventListener('wheel', (e) => {
@@ -302,6 +340,7 @@ canvas.addEventListener('wheel', (e) => {
 
 // --- Keyboard: [ ] switch panel, arrows nudge the selected photo.
 
+let lastNudgeCommit = 0;
 document.addEventListener('keydown', (e) => {
   if (e.target.matches('input, select, textarea')) return;
   const panel = state.panels[state.selected];
@@ -317,7 +356,12 @@ document.addEventListener('keydown', (e) => {
   const move = moves[e.key];
   if (!move) return;
   e.preventDefault();
-  history.push(serializeState(state));
+  // Arrow-key nudges coalesce: one undo step per burst, like the wheel.
+  const now = Date.now();
+  if (now - lastNudgeCommit > 600) {
+    history.push(serializeState(state));
+    lastNudgeCommit = now;
+  }
   panel.ox += move[0];
   panel.oy += move[1];
   clampPanelCrop(panel);
@@ -337,6 +381,7 @@ function syncInputs() {
   $('heat').value = String(state.heat);
   $('grain').checked = state.grain !== false;
   $('vignette').checked = state.vignette !== false;
+  $('frame').checked = state.frame !== false;
   syncButtons();
 }
 

@@ -4,3 +4,4 @@ node_modules/
 *.log
 .DS_Store
 Thumbs.db
+# The make.fun record log lives in ~/.makefun, never in this repository.
