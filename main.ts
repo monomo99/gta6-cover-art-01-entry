@@ -9,7 +9,7 @@
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-app.ts';
@@ -17,16 +17,37 @@ import { buildDossier } from './vendor/makefun-app.ts';
 const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
+// The scorer's own caps (reference/gate.json): app/ holds at most 993 files and
+// directories and 48 MiB in all, screenshots/ at most 4 files of 256 KiB each. Refuse
+// early, with a plain message, rather than handing in an entry the scorer refuses.
+function checkTree(dir, maxFiles, maxBytes, label) {
+  let files = 0;
+  let bytes = 0;
+  const walk = (d) => {
+    for (const name of readdirSync(d)) {
+      const p = join(d, name);
+      const st = statSync(p);
+      if (st.isDirectory()) { files += 1; walk(p); }
+      else if (st.isFile()) { files += 1; bytes += st.size; }
+    }
+  };
+  walk(dir);
+  if (files > maxFiles) throw new Error(`${label}: ${files} entries, over the ${maxFiles} cap`);
+  if (bytes > maxBytes) throw new Error(`${label}: ${bytes} bytes, over the ${maxBytes} cap`);
+}
+
+checkTree(join(here, 'app'), 993, 48 * 1024 * 1024, 'app/');
+if (existsSync(join(here, 'screenshots'))) {
+  checkTree(join(here, 'screenshots'), 4, 4 * 256 * 1024, 'screenshots/');
+}
+
 mkdirSync(out, { recursive: true });
 cpSync(join(here, 'app'), join(out, 'app'), { recursive: true });
 mkdirSync(join(out, 'screenshots'), { recursive: true });
 if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
 
-// The scorer's own caps (reference/gate.json): only text_max_bytes shapes the bytes; the
-// others refuse an entry the scorer would refuse (more than 4 screenshots or one over
-// 256 KiB; more than 993 files in app/ or 48 MiB of app files, in all, or a path under
-// app/ over 1000 bytes: app/ counts beside /output's own 1000-entry cap, its
-// screenshots/ and dossier.json).
+// buildDossier writes the judge's view of the entry from what was just copied, so the
+// dossier always matches the handed-in files byte for byte.
 writeFileSync(
   join(out, 'dossier.json'),
   buildDossier(out, {
@@ -37,3 +58,9 @@ writeFileSync(
     app_path_max_bytes: 1000,
   }),
 );
+
+// Say what was handed in, so a local run shows its result at a glance instead of
+// failing silently when the dossier comes out empty.
+const dossierBytes = statSync(join(out, 'dossier.json')).size;
+if (dossierBytes < 100) throw new Error('dossier.json came out suspiciously small');
+console.log(`Neon Shore Cover Studio handed in: app/ + ${readdirSync(join(out, 'screenshots')).length} screenshot(s), dossier.json ${dossierBytes} bytes.`);

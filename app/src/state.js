@@ -21,18 +21,30 @@ export function freshState() {
   };
 }
 
+/** How many photo slots a layout shows. */
+export function panelCountForLayout(layout) {
+  return (LAYOUTS[layout] || LAYOUTS['vice-grid']).panels;
+}
+
 /** Panel slots for a layout, each an empty photo slot. */
 export function emptyPanels(layout) {
-  const n = (LAYOUTS[layout] || LAYOUTS['vice-grid']).panels;
-  return Array.from({ length: n }, () => ({ img: null, src: null, zoom: 1, ox: 0, oy: 0 }));
+  return Array.from({ length: panelCountForLayout(layout) }, () => ({ img: null, src: null, zoom: 1, ox: 0, oy: 0 }));
 }
 
 /** Resize the panel list when the layout changes, keeping photos that still fit. */
 export function panelsForLayout(state, layout) {
-  const n = (LAYOUTS[layout] || LAYOUTS['vice-grid']).panels;
+  const n = panelCountForLayout(layout);
   const kept = state.panels.slice(0, n);
   while (kept.length < n) kept.push({ img: null, src: null, zoom: 1, ox: 0, oy: 0 });
   return kept;
+}
+
+/** Clamps a panel's crop so the photo can never be dragged out of its frame. */
+export function clampPanelCrop(panel) {
+  panel.zoom = Math.max(1, Math.min(4, panel.zoom || 1));
+  panel.ox = Math.max(-0.5, Math.min(0.5, panel.ox || 0));
+  panel.oy = Math.max(-0.5, Math.min(0.5, panel.oy || 0));
+  return panel;
 }
 
 /** Serialisable state (images as src strings) for undo history. */
@@ -49,7 +61,7 @@ export async function restoreState(json, resolve) {
   const state = { ...raw, panels: [] };
   for (const p of raw.panels) {
     const img = p.src ? await resolve(p.src) : null;
-    state.panels.push({ img, src: p.src, zoom: p.zoom ?? 1, ox: p.ox ?? 0, oy: p.oy ?? 0 });
+    state.panels.push(clampPanelCrop({ img, src: p.src, zoom: p.zoom ?? 1, ox: p.ox ?? 0, oy: p.oy ?? 0 }));
   }
   return state;
 }

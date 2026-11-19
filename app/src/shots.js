@@ -1,10 +1,11 @@
 // Fixed scenes for screenshots: ?shot=editor shows the page with sample photos loaded;
 // ?shot=cover shows the exported cover alone. Query knobs: layout, grade, size, title,
-// subtitle, tagline, heat, photo (one sample for every panel) and panels (a comma list
-// of samples, one per panel). window.__shotReady is set once the cover is painted.
+// subtitle, tagline, heat, photo (one sample for every panel), panels (a comma list of
+// samples, one per panel) and zooms (a comma list of zoom factors, one per panel).
+// window.__shotReady is set once the cover is painted.
 
 import { drawCover, SIZES } from './cover.js';
-import { freshState, panelsForLayout } from './state.js';
+import { freshState, panelsForLayout, clampPanelCrop } from './state.js';
 
 function loadImage(url) {
   return new Promise((resolve, reject) => {
@@ -38,14 +39,17 @@ export async function runShot(shot, query, apply) {
   state.heat = Number(query.get('heat') || 5);
   state.panels = panelsForLayout(state, state.layout);
   const names = (query.get('panels') || '').split(',').filter(Boolean);
+  const zooms = (query.get('zooms') || '').split(',').map(Number);
   const single = query.get('photo') || 'pier';
-  for (let i = 0; i < state.panels.length; i++) {
+  // Load every panel photo in parallel: a shot waits on the slowest, not the sum.
+  const loaded = await Promise.all(
+    state.panels.map((_, i) => loadImage(`samples/${names[i] || single}.jpg`)),
+  );
+  loaded.forEach((img, i) => {
     const name = names[i] || single;
-    const img = await loadImage(`samples/${name}.jpg`);
-    state.panels[i] = { img, src: `sample:${name}`, zoom: 1, ox: 0, oy: 0 };
-  }
-  // Keep the shot crops neutral: cover-fit at zoom 1, centred, so faces stay in frame.
-  state.panels.forEach((p) => { p.zoom = 1; p.ox = 0; p.oy = 0; });
+    const zoom = Number.isFinite(zooms[i]) && zooms[i] > 0 ? zooms[i] : 1;
+    state.panels[i] = clampPanelCrop({ img, src: `sample:${name}`, zoom, ox: 0, oy: 0 });
+  });
   await loadFonts();
   const size = SIZES[state.size] || SIZES['1080x1080'];
   const canvas = document.getElementById('cover');

@@ -1,1 +1,6 @@
+# Neon Shore Cover Studio — files that never enter the entry.
 out/
+node_modules/
+*.log
+.DS_Store
+Thumbs.db

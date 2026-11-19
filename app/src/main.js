@@ -3,7 +3,7 @@
 // query sets up a fixed scene for a screenshot instead (./shots.js).
 
 import { drawCover, GRADES, LAYOUTS, SIZES, lastPanels } from './cover.js';
-import { freshState, panelsForLayout, serializeState, restoreState, makeHistory } from './state.js';
+import { freshState, panelsForLayout, serializeState, restoreState, makeHistory, clampPanelCrop } from './state.js';
 import { runShot } from './shots.js';
 
 const canvas = document.getElementById('cover');
@@ -85,6 +85,32 @@ function clearPanel() {
   setStatus(`Cleared panel ${state.selected + 1}.`);
 }
 
+function surpriseMe() {
+  const layouts = Object.keys(LAYOUTS);
+  const grades = Object.keys(GRADES);
+  const layout = layouts[Math.floor(Math.random() * layouts.length)];
+  const grade = grades[Math.floor(Math.random() * grades.length)];
+  history.push(serializeState(state));
+  state.layout = layout;
+  state.grade = grade;
+  state.panels = panelsForLayout(state, state.layout);
+  state.selected = 0;
+  syncButtons();
+  redraw();
+  setStatus(`Surprise: ${LAYOUTS[layout].label} + ${GRADES[grade].label}.`);
+}
+
+function resetCover() {
+  history.push(serializeState(state));
+  const keepSize = state.size;
+  state = freshState();
+  state.size = keepSize;
+  state.panels = panelsForLayout(state, state.layout);
+  syncInputs();
+  redraw();
+  setStatus('Cover reset — fresh Vice Grid, Sunset Strip.');
+}
+
 function exportSize(key, silent) {
   const size = SIZES[key];
   const off = document.createElement('canvas');
@@ -126,6 +152,8 @@ document.querySelectorAll('[data-sample]').forEach((btn) => {
 });
 $('fillAll').addEventListener('click', fillAllPanels);
 $('clearPanel').addEventListener('click', clearPanel);
+$('surprise').addEventListener('click', surpriseMe);
+$('reset').addEventListener('click', resetCover);
 
 document.querySelectorAll('[data-layout]').forEach((btn) => {
   btn.addEventListener('click', () => {
@@ -169,8 +197,11 @@ $('zoom').addEventListener('input', (e) => {
   const panel = state.panels[state.selected];
   if (!panel) return;
   panel.zoom = Number(e.target.value) / 100;
+  clampPanelCrop(panel);
   redraw();
 });
+// The slider drag is one undo step: commit when the drag ends, not on every tick.
+$('zoom').addEventListener('change', () => { commit(); });
 $('centerPhoto').addEventListener('click', () => {
   const panel = state.panels[state.selected];
   if (!panel) return;
@@ -233,8 +264,7 @@ canvas.addEventListener('pointermove', (e) => {
   if (!panel || !rect) return;
   panel.ox = dragPanel.ox + (p.x - dragStart.x) / rect.w;
   panel.oy = dragPanel.oy + (p.y - dragStart.y) / rect.h;
-  panel.ox = Math.max(-0.5, Math.min(0.5, panel.ox));
-  panel.oy = Math.max(-0.5, Math.min(0.5, panel.oy));
+  clampPanelCrop(panel);
   redraw();
 });
 
@@ -254,13 +284,51 @@ canvas.addEventListener('pointerup', () => {
   dragPanel = null;
 });
 
+// A wheel burst is one undo step: commit once when a burst starts, then zoom freely.
+let lastWheelCommit = 0;
 canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
   const panel = state.panels[state.selected];
   if (!panel || !panel.img) return;
-  panel.zoom = Math.max(1, Math.min(4, (panel.zoom || 1) * (e.deltaY < 0 ? 1.08 : 0.93)));
+  const now = Date.now();
+  if (now - lastWheelCommit > 600) {
+    history.push(serializeState(state));
+    lastWheelCommit = now;
+  }
+  panel.zoom = (panel.zoom || 1) * (e.deltaY < 0 ? 1.08 : 0.93);
+  clampPanelCrop(panel);
   redraw();
 }, { passive: false });
+
+// --- Keyboard: [ ] switch panel, arrows nudge the selected photo.
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.matches('input, select, textarea')) return;
+  const panel = state.panels[state.selected];
+  if (e.key === '[' || e.key === ']') {
+    const n = state.panels.length;
+    state.selected = (state.selected + (e.key === ']' ? 1 : n - 1)) % n;
+    redraw();
+    return;
+  }
+  if (!panel || !panel.img) return;
+  const step = 0.02;
+  const moves = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+  const move = moves[e.key];
+  if (!move) return;
+  e.preventDefault();
+  history.push(serializeState(state));
+  panel.ox += move[0];
+  panel.oy += move[1];
+  clampPanelCrop(panel);
+  redraw();
+});
+
+function syncButtons() {
+  document.querySelectorAll('[data-layout]').forEach((b) => b.classList.toggle('active', b.dataset.layout === state.layout));
+  document.querySelectorAll('[data-grade]').forEach((b) => b.classList.toggle('active', b.dataset.grade === state.grade));
+  document.querySelectorAll('[data-size]').forEach((b) => b.classList.toggle('active', b.dataset.size === state.size));
+}
 
 function syncInputs() {
   $('title').value = state.title;
@@ -269,9 +337,7 @@ function syncInputs() {
   $('heat').value = String(state.heat);
   $('grain').checked = state.grain !== false;
   $('vignette').checked = state.vignette !== false;
-  document.querySelectorAll('[data-layout]').forEach((b) => b.classList.toggle('active', b.dataset.layout === state.layout));
-  document.querySelectorAll('[data-grade]').forEach((b) => b.classList.toggle('active', b.dataset.grade === state.grade));
-  document.querySelectorAll('[data-size]').forEach((b) => b.classList.toggle('active', b.dataset.size === state.size));
+  syncButtons();
 }
 
 async function boot() {

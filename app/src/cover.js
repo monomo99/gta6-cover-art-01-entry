@@ -1,8 +1,9 @@
 // Neon Shore Cover Studio — the cover engine.
 // Draws a multi-panel GTA-style poster cover onto a canvas: photo panels in one of four
-// layouts, a Vice City neon-sunset colour grade, hand-drawn palm-and-sun sky art, bold
-// gradient title lettering with a script subtitle, grain and vignette. No Rockstar art,
-// logos or fonts: lettering is Anton, Pacifico and Bebas Neue (SIL OFL, under app/fonts/).
+// layouts, a Vice City neon-sunset colour grade, hand-drawn palm-and-sun sky art with a
+// striped poster sun, bold gradient title lettering with a script subtitle, grain and
+// vignette. No Rockstar art, logos or fonts: lettering is Anton, Pacifico and Bebas Neue
+// (SIL OFL, under app/fonts/).
 
 /** Colour grades: a wash over each photo plus the sky palette for the snapshot layout. */
 export const GRADES = {
@@ -162,6 +163,10 @@ function drawPhotoPanel(ctx, panel, photo, grade, noir) {
   ctx.fillRect(0, 0, panel.w, panel.h);
   ctx.fillStyle = grade.wash;
   ctx.fillRect(0, 0, panel.w, panel.h);
+  // Inked inner edge, so each panel reads as a printed poster tile.
+  ctx.strokeStyle = 'rgba(22,10,36,0.55)';
+  ctx.lineWidth = Math.max(2, panel.w * 0.006);
+  ctx.strokeRect(0, 0, panel.w, panel.h);
   ctx.restore();
 }
 
@@ -190,24 +195,59 @@ function drawPalm(ctx, x, y, s, color) {
   ctx.restore();
 }
 
+/** The poster sun: a glowing disc cut by horizontal slits, classic loading-screen style. */
+function drawStripedSun(ctx, x, y, r, color, skyTop) {
+  const glow = ctx.createRadialGradient(x, y, r * 0.2, x, y, r * 2.4);
+  glow.addColorStop(0, color);
+  glow.addColorStop(0.35, color + '55');
+  glow.addColorStop(1, color + '00');
+  ctx.fillStyle = glow;
+  ctx.fillRect(x - r * 2.6, y - r * 2.6, r * 5.2, r * 5.2);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.fillStyle = color;
+  ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  // Slits widen toward the sun's foot, so it fades into the horizon.
+  ctx.fillStyle = skyTop;
+  for (let i = 0; i < 4; i++) {
+    const sy = y + r * (0.05 + i * 0.22);
+    ctx.fillRect(x - r, sy, r * 2, r * (0.05 + i * 0.03));
+  }
+  ctx.restore();
+}
+
+/** Sun rays fanning out behind the sun, faint enough to sit under the panels. */
+function drawSunRays(ctx, x, y, r, color) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = color;
+  ctx.globalAlpha = 0.10;
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    ctx.save();
+    ctx.rotate(a);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(r * 3.2, -r * 0.16);
+    ctx.lineTo(r * 3.2, r * 0.16);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
 function drawSky(ctx, w, h, grade) {
   const sky = ctx.createLinearGradient(0, 0, 0, h);
   grade.sky.forEach((c, i) => sky.addColorStop(i / (grade.sky.length - 1), c));
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, w, h);
-  // Low sun with a glow.
   const sunR = Math.min(w, h) * 0.16;
   const sunX = w * 0.72, sunY = h * 0.30;
-  const glow = ctx.createRadialGradient(sunX, sunY, sunR * 0.2, sunX, sunY, sunR * 2.4);
-  glow.addColorStop(0, grade.sun);
-  glow.addColorStop(0.35, grade.sun + '55');
-  glow.addColorStop(1, grade.sun + '00');
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = grade.sun;
-  ctx.beginPath();
-  ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
-  ctx.fill();
+  drawSunRays(ctx, sunX, sunY, sunR, grade.sun);
+  drawStripedSun(ctx, sunX, sunY, sunR, grade.sun, grade.sky[0]);
   // Horizon haze bands.
   ctx.fillStyle = 'rgba(255,255,255,0.07)';
   for (let i = 0; i < 3; i++) ctx.fillRect(0, h * (0.55 + i * 0.05), w, h * 0.012);
@@ -285,6 +325,9 @@ function drawTitleBand(ctx, w, h, state, grade) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
+  // Hard offset shadow first, so the letters lift off the band.
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillText(title, titleSize * 0.045, titleSize * 0.06);
   ctx.strokeStyle = '#14041f';
   ctx.lineWidth = titleSize * 0.09;
   ctx.strokeText(title, 0, 0);
@@ -292,15 +335,15 @@ function drawTitleBand(ctx, w, h, state, grade) {
   ctx.fillText(title, 0, 0);
   ctx.restore();
 
-  // Script subtitle, overlapping the title's foot on the right.
+  // Script subtitle, right-aligned above the tagline so it never collides with it.
   const sub = (state.subtitle || '').trim();
   if (sub) {
-    const subSize = fitFont(ctx, sub, w * 0.5, band * 0.26, 'Pacifico, cursive');
+    const subSize = fitFont(ctx, sub, w * 0.52, band * 0.26, 'Pacifico, cursive');
     ctx.save();
-    ctx.translate(w * 0.78, y0 + band * 0.82);
+    ctx.translate(w - pad, y0 + band * 0.78);
     ctx.rotate(-0.05);
     ctx.font = `${subSize}px Pacifico, cursive`;
-    ctx.textAlign = 'center';
+    ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     ctx.shadowColor = 'rgba(255,46,136,0.9)';
     ctx.shadowBlur = subSize * 0.35;
@@ -339,6 +382,15 @@ function drawTitleBand(ctx, w, h, state, grade) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('★ 26 ★', bx, by + badgeR * 0.05);
+  ctx.restore();
+}
+
+/** Thin white poster frame around the whole cover. */
+function drawPosterFrame(ctx, w, h) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,248,238,0.9)';
+  ctx.lineWidth = Math.max(3, w * 0.005);
+  ctx.strokeRect(ctx.lineWidth / 2, ctx.lineWidth / 2, w - ctx.lineWidth, h - ctx.lineWidth);
   ctx.restore();
 }
 
@@ -381,4 +433,5 @@ export function drawCover(canvas, state, opts = {}) {
     ctx.fillRect(0, 0, w, h);
     ctx.restore();
   }
+  drawPosterFrame(ctx, w, h);
 }
