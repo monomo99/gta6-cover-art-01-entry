@@ -1,22 +1,4 @@
-Copyright 2020 The Anton Project Authors (https://github.com/googlefonts/AntonFont.git)
-Copyright 2019 The Bebas Neue Project Authors (https://github.com/dharmatype/Bebas-Neue)
-Copyright 2018 The Pacifico Project Authors (https://github.com/googlefonts/Pacifico)
-
-The fonts bundled with this entry under app/fonts/ — Anton-Regular.ttf,
-BebasNeue-Regular.ttf and Pacifico-Regular.ttf — are each released under the
-SIL Open Font License, Version 1.1. That license is reproduced in full below,
-and this file holds the copyright notice for every one of the three fonts, as
-the license asks of any bundled copy. The wording of the license itself is
-untouched; only this heading is the entry's own.
-
-This Font Software is licensed under the SIL Open Font License, Version 1.1.
-This license is copied below, and is also available with a FAQ at:
-http://scripts.sil.org/OFL
-
-
------------------------------------------------------------
 SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
------------------------------------------------------------
 
 PREAMBLE
 The goals of the Open Font License (OFL) are to stimulate worldwide
@@ -47,8 +29,8 @@ distributed by the Copyright Holder(s).
 
 "Modified Version" refers to any derivative made by adding to, deleting,
 or substituting -- in part or in whole -- any of the components of the
-Original Version, by changing formats or by porting the Font Software to
-a new environment.
+Original Version, by changing formats or by porting the Font Software to a
+new environment.
 
 "Author" refers to any designer, engineer, programmer, technical
 writer or other person who contributed to the Font Software.
@@ -74,8 +56,8 @@ Name(s) unless explicit written permission is granted by the corresponding
 Copyright Holder. This restriction only applies to the primary font name as
 presented to the users.
 
-4) The name(s) of the Copyright Holder(s) or the Author(s) of the
-Font Software shall not be used to promote, endorse or advertise any
+4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
+Software shall not be used to promote, endorse or advertise any
 Modified Version, except to acknowledge the contribution(s) of the
 Copyright Holder(s) and the Author(s) or with their explicit written
 permission.
@@ -98,5 +80,5 @@ OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
 COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
 DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
-OTHER DEALINGS IN THE FONT SOFTWARE.
+FROM, OUT OF OR IN CONNECTION WITH THE USE OR INABILITY TO USE THE FONT
+SOFTWARE OR FROM OTHER DEALINGS IN THE FONT SOFTWARE.

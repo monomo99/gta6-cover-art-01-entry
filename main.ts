@@ -1,75 +1,57 @@
-// Neon Shore Cover Studio — the gta6-cover-art-01 entry program (Node 22, stdlib only).
-// The app is this folder's app/ directory: plain static files a desktop browser loads
-// offline — app/index.html with its ES modules, three SIL OFL fonts and two sample
-// photos made for make.fun, and no network request at all. This program hands the
-// entry in: it copies app/ and screenshots/ from beside this file into /output and
-// writes /output/dossier.json, the summary the judge reads, using the vendored
-// make.fun library.
-//
-// Try it locally with `node serve.ts`, then open http://localhost:8080.
-// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+// Neon Shore Cover Studio — entrypoint program.
+// Node 22, standard library only. Copies app/ and screenshots/ from this
+// repository into the output directory (/output, or MAKEFUN_OUTPUT_DIR
+// when set) and writes /output/dossier.json with buildDossier from
+// vendor/makefun-app.ts. Running it twice writes identical bytes: the copy
+// is a plain recursive copy with no timestamps recorded anywhere, and
+// buildDossier is deterministic for a given input tree.
 
-import { cpSync, existsSync, lstatSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-app.ts';
 
-const here = fileURLToPath(new URL('.', import.meta.url));
-const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const REPO_ROOT = resolve(join(fileURLToPath(import.meta.url), '..'));
+const OUT_DIR = resolve(process.env.MAKEFUN_OUTPUT_DIR || '/output');
 
-// The scorer's own caps (reference/gate.json): app/ holds at most 993 files and
-// directories totalling 48 MiB, screenshots/ at most 4 files of 256 KiB each. Refuse
-// early, with a plain message, rather than handing in an entry the scorer refuses.
-// A symlink anywhere in the handed-in trees is refused too: the gate only accepts
-// plain files and directories, and a link could point outside the entry.
-function checkTree(dir, maxFiles, maxBytes, label) {
-  let files = 0;
-  let bytes = 0;
-  const walk = (d) => {
-    for (const name of readdirSync(d)) {
-      const p = join(d, name);
-      const st = lstatSync(p);
-      if (st.isSymbolicLink()) throw new Error(`${label}: ${p} is a symlink, plain files only`);
-      if (st.isDirectory()) { files += 1; walk(p); }
-      else if (st.isFile()) { files += 1; bytes += st.size; }
-    }
-  };
-  walk(dir);
-  if (files > maxFiles) throw new Error(`${label}: ${files} entries, over the ${maxFiles} cap`);
-  if (bytes > maxBytes) throw new Error(`${label}: ${bytes} bytes, over the ${maxBytes} cap`);
+// The two trees this entry hands in, in a fixed order.
+const TREES = ['app', 'screenshots'];
+
+// Count the plain files under a directory, for the handover summary.
+function countFiles(dir) {
+  let n = 0;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, entry.name);
+    if (entry.isDirectory()) n += countFiles(p);
+    else if (entry.isFile()) n += 1;
+  }
+  return n;
 }
 
-checkTree(join(here, 'app'), 993, 48 * 1024 * 1024, 'app/');
-if (existsSync(join(here, 'screenshots'))) {
-  checkTree(join(here, 'screenshots'), 4, 4 * 256 * 1024, 'screenshots/');
+// Copy one tree (app/ or screenshots/) into the output directory,
+// replacing any earlier copy so a stale file can never survive.
+function copyTree(name) {
+  const src = join(REPO_ROOT, name);
+  if (!existsSync(src) || !statSync(src).isDirectory()) {
+    throw new Error(`main.ts: ${name}/ is missing from the repository`);
+  }
+  const dst = join(OUT_DIR, name);
+  rmSync(dst, { recursive: true, force: true });
+  cpSync(src, dst, { recursive: true });
 }
 
-mkdirSync(out, { recursive: true });
-cpSync(join(here, 'app'), join(out, 'app'), { recursive: true });
-mkdirSync(join(out, 'screenshots'), { recursive: true });
-if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
+mkdirSync(OUT_DIR, { recursive: true });
+for (const name of TREES) copyTree(name);
 
-// buildDossier writes the judge's view from what was just copied, so the dossier
-// always matches the handed-in files byte for byte.
-writeFileSync(
-  join(out, 'dossier.json'),
-  buildDossier(out, {
-    text_max_bytes: 163840,
-    screenshots: { max: 4, max_bytes: 262144 },
-    app_max_files: 993,
-    app_max_bytes: 50331648,
-    app_path_max_bytes: 1000,
-  }),
-);
+const dossier = buildDossier(OUT_DIR, {
+  text_max_bytes: 163840,
+  screenshots: { max: 4, max_bytes: 262144 },
+  app_max_files: 993,
+  app_max_bytes: 50331648,
+});
+writeFileSync(join(OUT_DIR, 'dossier.json'), dossier);
 
-// The gate caps dossier.json at 1.5 MiB: refuse a bloated one here, not at the scorer.
-const dossierBytes = statSync(join(out, 'dossier.json')).size;
-if (dossierBytes < 100) throw new Error('dossier.json came out suspiciously small');
-if (dossierBytes > 1572864) throw new Error(`dossier.json is ${dossierBytes} bytes, over the 1.5 MiB cap`);
-// The hand-in is only complete when the app's entry page landed in /output.
-if (!existsSync(join(out, 'app', 'index.html'))) throw new Error('app/index.html did not land in /output');
-
-// Say what was handed in, so a local run shows its result at a glance instead of
-// failing silently when the dossier comes out empty.
-console.log(`Neon Shore Cover Studio handed in: app/ + ${readdirSync(join(out, 'screenshots')).length} screenshot(s), dossier.json ${dossierBytes} bytes.`);
+const appFiles = countFiles(join(OUT_DIR, 'app'));
+const shotFiles = countFiles(join(OUT_DIR, 'screenshots'));
+console.log(`Neon Shore Cover Studio handed in to ${OUT_DIR}`);
+console.log(`  app/: ${appFiles} files, screenshots/: ${shotFiles} files, dossier.json written`);

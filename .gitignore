@@ -1,9 +1,5 @@
-# Neon Shore Cover Studio — things that never get committed.
-# The local hand-in folder (where main.ts writes when MAKEFUN_OUTPUT_DIR is set)
-# and any installed dependency tree stay off the entry entirely.
 out/
 node_modules/
 *.log
 .DS_Store
 Thumbs.db
-# The make.fun record log lives in ~/.makefun, never in this repository.

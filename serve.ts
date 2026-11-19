@@ -1,73 +1,113 @@
-// Serves app/ at http://localhost:8080 for local testing. Static files only, no
-// network of its own. A request path is resolved inside app/ and refused when it
-// tries to climb out of it. HEAD answers with headers alone; a port already taken
-// fails with a plain message.
+// Neon Shore Cover Studio — tiny static server for app/.
+// Node 22, standard library only. Serves http://localhost:8080 with correct
+// MIME types, HEAD support, and a hard refusal to serve anything outside
+// app/ (no parent traversal, no symlinks escaping it).
+
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
-import { join, extname, resolve, sep } from 'node:path';
+import { createReadStream, lstatSync, realpathSync } from 'node:fs';
+import { join, resolve, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const here = fileURLToPath(new URL('.', import.meta.url));
-const root = resolve(join(here, 'app'));
-const port = Number(process.env.PORT ?? 8080);
-const types = {
+const APP_ROOT = realpathSync(resolve(join(fileURLToPath(import.meta.url), '..', 'app')));
+const PORT = 8080;
+
+const MIME = {
   '.html': 'text/html; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
-  '.txt': 'text/plain; charset=utf-8',
-  '.xml': 'application/xml; charset=utf-8',
-  '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.webp': 'image/webp',
-  '.avif': 'image/avif',
-  '.ico': 'image/x-icon',
   '.ttf': 'font/ttf',
-  '.otf': 'font/otf',
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
+  '.svg': 'image/svg+xml',
+  '.txt': 'text/plain; charset=utf-8',
 };
 
-const server = createServer(async (req, res) => {
-  const url = new URL(req.url ?? '/', 'http://localhost');
-  const path = url.pathname === '/' ? '/index.html' : url.pathname;
-  const file = resolve(join(root, decodeURIComponent(path)));
-  if (file !== root && !file.startsWith(root + sep)) {
-    res.writeHead(403, { 'content-type': 'text/plain' });
-    res.end('forbidden');
+// Resolve a request path to a file inside app/:
+//   { file }        the file to serve
+//   { missing: true } the path is inside app/ but no such file (404)
+//   null            the path escapes app/ (403)
+// A missing file must not read as an escape: realpathSync throws for a
+// path that does not exist, so existence is checked first.
+function resolveInsideApp(urlPath) {
+  let decoded;
+  try {
+    decoded = decodeURIComponent(urlPath);
+  } catch {
+    return null;
+  }
+  const clean = decoded.split('?')[0].split('#')[0];
+  const joined = resolve(APP_ROOT, '.' + clean);
+  if (joined !== APP_ROOT && !joined.startsWith(APP_ROOT + '/')) return null;
+  try {
+    lstatSync(joined);
+  } catch {
+    return { missing: true };
+  }
+  let real;
+  try {
+    real = realpathSync(joined);
+  } catch {
+    return { missing: true };
+  }
+  if (real !== APP_ROOT && !real.startsWith(APP_ROOT + '/')) return null;
+  return { file: real };
+}
+
+const server = createServer((req, res) => {
+  const method = req.method || 'GET';
+  if (method !== 'GET' && method !== 'HEAD') {
+    res.writeHead(405, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('Method not allowed\n');
     return;
   }
+  let path = '/';
   try {
-    const body = await readFile(file);
-    const headers = {
-      'content-type': types[extname(file).toLowerCase()] ?? 'application/octet-stream',
-      'content-length': body.length,
-    };
-    // A HEAD request gets the headers and no body.
-    if (req.method === 'HEAD') {
-      res.writeHead(200, headers);
-      res.end();
-      return;
-    }
-    res.writeHead(200, headers);
-    res.end(body);
+    path = new URL(req.url || '/', 'http://localhost').pathname;
   } catch {
-    res.writeHead(404, { 'content-type': 'text/plain' });
-    res.end('not found');
+    res.writeHead(400, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('Bad request\n');
+    return;
   }
+  if (path === '/') path = '/index.html';
+  const resolved = resolveInsideApp(path);
+  if (resolved === null) {
+    res.writeHead(403, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('Forbidden\n');
+    return;
+  }
+  if (resolved.missing) {
+    res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('Not found\n');
+    return;
+  }
+  const file = resolved.file;
+  let st;
+  try {
+    st = lstatSync(file);
+  } catch {
+    res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('Not found\n');
+    return;
+  }
+  if (!st.isFile()) {
+    res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('Not found\n');
+    return;
+  }
+  const type = MIME[extname(file).toLowerCase()] || 'application/octet-stream';
+  res.writeHead(200, { 'content-type': type, 'content-length': st.size });
+  if (method === 'HEAD') {
+    res.end();
+    return;
+  }
+  createReadStream(file).pipe(res);
 });
 
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`Port ${port} is already in use — stop the other server or set PORT to another one.`);
-  } else {
-    console.error(`Neon Shore server failed to start: ${err.message}`);
-  }
-  process.exitCode = 1;
+server.listen(PORT, () => {
+  console.log(`Neon Shore Cover Studio at http://localhost:${PORT}`);
 });
-
-server.listen(port, () => console.log(`Neon Shore Cover Studio at http://localhost:${port}`));

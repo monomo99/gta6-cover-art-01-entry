@@ -1,79 +1,56 @@
-// Fixed scenes for screenshots: ?shot=editor shows the page with sample photos in
-// place; ?shot=cover shows the exported cover on its own. Query knobs: layout,
-// grade, size, title, subtitle, tagline, heat, photo (one sample for every panel),
-// panels (a comma list of samples, one per panel), zooms (zoom factors, one per
-// panel), flips (a comma list of 0/1, one per panel), oxs / oys (offset lists, one
-// per panel) and frame=0 (poster frame off). window.__shotReady is set once the
-// cover has been painted.
+// Neon Shore Cover Studio — screenshot mode.
+// Reads URL query params (?shot=cover|editor plus layout, grade, size,
+// title, subtitle, panels, zooms, flips, frame, oxs, oys) and applies them
+// to STATE on load, so screenshots are driven deterministically.
+// In cover mode the editor chrome is hidden and only the poster shows.
 
-import { drawCover, SIZES } from './cover.js';
-import { freshState, panelsForLayout, clampPanelCrop } from './state.js';
-
-function loadImage(url) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = url;
-  });
+// Split a comma list, dropping empty pieces.
+function splitList(value) {
+  if (!value) return [];
+  return value.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
 }
 
-async function loadFonts() {
-  try {
-    await Promise.all([
-      document.fonts.load('40px Anton'),
-      document.fonts.load('40px Pacifico'),
-      document.fonts.load('40px "Bebas Neue"'),
-    ]);
-    await document.fonts.ready;
-  } catch (_) { /* fall back to system fonts */ }
-}
+// Apply the page's query string to STATE. Returns the shot kind:
+// 'cover', 'editor', or '' when no ?shot param was given.
+function applyShotParams() {
+  const q = new URLSearchParams(window.location.search);
+  const shot = q.get('shot') || '';
+  if (q.get('layout') && LAYOUTS[q.get('layout')]) STATE.layout = q.get('layout');
+  if (q.get('grade') && GRADES[q.get('grade')]) STATE.grade = q.get('grade');
+  if (q.get('size') && EXPORT_SIZES[q.get('size')]) STATE.size = q.get('size');
+  if (q.get('title') !== null && q.get('title') !== '') STATE.title = q.get('title');
+  if (q.get('subtitle') !== null) STATE.subtitle = q.get('subtitle');
+  if (q.get('frame') !== null) STATE.frame = q.get('frame') !== 'false' && q.get('frame') !== '0';
+  if (q.get('halftone') !== null) STATE.halftone = q.get('halftone') !== 'false';
+  if (q.get('birds') !== null) STATE.birds = q.get('birds') !== 'false';
 
-/** A comma list of numbers, keeping only the finite entries, in order. */
-export function numberList(raw) {
-  return String(raw || '').split(',').map((s) => Number(s.trim())).filter((n) => Number.isFinite(n));
-}
-
-/** Build the scene state from the query and paint it. `apply` hands the state to the editor. */
-export async function runShot(shot, query, apply) {
-  const state = freshState();
-  state.layout = query.get('layout') || 'vice-grid';
-  state.grade = query.get('grade') || 'sunset';
-  state.size = query.get('size') || '1080x1080';
-  state.title = query.get('title') || 'NEON SHORE';
-  state.subtitle = query.get('subtitle') ?? 'a sunset story';
-  state.tagline = query.get('tagline') ?? 'EST. 2026 · SUNSET STATE';
-  state.heat = Number(query.get('heat') || 5);
-  state.frame = query.get('frame') !== '0';
-  state.panels = panelsForLayout(state, state.layout);
-  const names = (query.get('panels') || '').split(',').filter(Boolean);
-  const zooms = numberList(query.get('zooms'));
-  const flips = numberList(query.get('flips'));
-  const oxs = numberList(query.get('oxs'));
-  const oys = numberList(query.get('oys'));
-  const single = query.get('photo') || 'pier';
-  // Load every panel photo in parallel: a shot waits on the slowest, not the sum.
-  const loaded = await Promise.all(
-    state.panels.map((_, i) => loadImage(`samples/${names[i] || single}.jpg`)),
-  );
-  loaded.forEach((img, i) => {
-    const name = names[i] || single;
-    const zoom = zooms[i] > 0 ? zooms[i] : 1;
-    const ox = Number.isFinite(oxs[i]) ? oxs[i] : 0;
-    const oy = Number.isFinite(oys[i]) ? oys[i] : 0;
-    const flip = flips[i] === 1;
-    state.panels[i] = clampPanelCrop({ img, src: `sample:${name}`, zoom, ox, oy, flip });
-  });
-  await loadFonts();
-  const size = SIZES[state.size] || SIZES['1080x1080'];
-  const canvas = document.getElementById('cover');
-  canvas.width = size.w;
-  canvas.height = size.h;
-  if (shot === 'cover') {
-    document.body.classList.add('shot-cover');
-    drawCover(canvas, { ...state, selected: null });
-  } else {
-    apply(state);
+  const panels = splitList(q.get('panels'));
+  const zooms = splitList(q.get('zooms')).map(Number);
+  const flips = splitList(q.get('flips'));
+  const oxs = splitList(q.get('oxs')).map(Number);
+  const oys = splitList(q.get('oys')).map(Number);
+  for (let i = 0; i < STATE.panels.length; i++) {
+    const p = STATE.panels[i];
+    if (panels[i] && (SAMPLE_PHOTOS[panels[i]] || panels[i] === 'custom')) p.photo = panels[i];
+    if (Number.isFinite(zooms[i]) && zooms[i] > 0) p.zoom = zooms[i];
+    if (flips[i] !== undefined) p.flip = flips[i] === '1' || flips[i] === 'true';
+    if (Number.isFinite(oxs[i])) p.ox = Math.max(-0.5, Math.min(0.5, oxs[i]));
+    if (Number.isFinite(oys[i])) p.oy = Math.max(-0.5, Math.min(0.5, oys[i]));
   }
-  requestAnimationFrame(() => requestAnimationFrame(() => { window.__shotReady = true; }));
+  return shot;
+}
+
+// Switch the page into the shot's presentation: cover shots show only the
+// poster, editor shots show the full editor with a photo loaded.
+function setupShotMode(shot) {
+  document.body.dataset.shot = shot || 'live';
+  if (shot === 'cover') document.body.classList.add('cover-only');
+  else document.body.classList.remove('cover-only');
+}
+
+// Mark the page ready for a screenshot once the fonts are in and the
+// preview has been drawn. The shot driver waits on window.__shotReady.
+function markShotReady() {
+  window.__shotReady = true;
+  document.body.dataset.ready = 'yes';
 }
