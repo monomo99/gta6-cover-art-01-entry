@@ -1,11 +1,10 @@
-// Neon Shore Cover Studio — the cover engine.
-// Draws a multi-panel GTA-style poster cover onto a canvas: photo panels in one of four
-// layouts, a Vice City neon-sunset colour grade, hand-drawn palm-and-sun sky art with a
-// striped poster sun, bold gradient title lettering with a script subtitle, grain and
-// vignette. No Rockstar art, logos or fonts: lettering is Anton, Pacifico and Bebas Neue
-// (SIL OFL, under app/fonts/).
+// Neon Shore Cover Studio — the cover engine, drawing the whole poster on a canvas.
+// Four layouts of photo panels sit above a title band; a neon-sunset grade washes
+// the photos; hand-drawn palm-and-sun sky art, a striped poster sun, bold gradient
+// title lettering and a script subtitle finish it. Nothing here is Rockstar's: the
+// lettering is Anton, Pacifico and Bebas Neue, all SIL OFL, under app/fonts/.
 
-/** Colour grades: a wash over each photo plus the sky palette for the snapshot layout. */
+/** Grades: the wash over each photo plus the sky palette for the snapshot layout. */
 export const GRADES = {
   sunset: {
     label: 'Sunset Strip',
@@ -39,7 +38,7 @@ export const GRADES = {
   },
 };
 
-/** Layouts: how the panels sit above the title band. */
+/** Layouts: how the photo panels sit above the title band. */
 export const LAYOUTS = {
   'vice-grid': { label: 'Vice Grid', panels: 3 },
   nine: { label: 'Nine Lives', panels: 9 },
@@ -47,7 +46,7 @@ export const LAYOUTS = {
   snapshots: { label: 'Snapshot Strip', panels: 3 },
 };
 
-/** Post sizes the app exports. */
+/** The post sizes the app exports. */
 export const SIZES = {
   '1080x1080': { label: 'Square · 1080 × 1080', w: 1080, h: 1080 },
   '1080x1350': { label: 'Portrait · 1080 × 1350', w: 1080, h: 1350 },
@@ -57,12 +56,12 @@ export const SIZES = {
 const INK = '#160a24';
 const PAPER = '#fff8ee';
 
-/** The last panel rectangles drawn, for click hit-testing. Set by drawCover. */
+/** The panel rectangles from the last draw, for click hit-testing. Set by drawCover. */
 export let lastPanels = [];
-/** The title band rectangle drawn, for hit-testing. */
+/** The title band rectangle from the last draw. */
 export let lastBand = null;
 
-/** A hex colour (#rgb or #rrggbb) with a safe alpha — never string-concatenated. */
+/** A hex colour (#rgb or #rrggbb) with a safe alpha — never built by string concat. */
 export function hexA(hex, alpha) {
   const m = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(String(hex || '').trim());
   if (!m) return `rgba(255, 255, 255, ${alpha})`;
@@ -76,7 +75,7 @@ function bandHeight(w, h) {
   return h * (w > h ? 0.26 : w === h ? 0.21 : 0.19);
 }
 
-/** Panel rectangles for a layout, in canvas pixels. */
+/** The panel rectangles for a layout, in canvas pixels. */
 export function layoutPanels(layout, w, h) {
   const band = bandHeight(w, h);
   const top = h - band;
@@ -104,7 +103,7 @@ export function layoutPanels(layout, w, h) {
       { x: w * 0.60, y: cy - ph / 2, w: pw, h: ph, rot: -0.03 },
     ];
   }
-  // vice-grid: a hero panel on the left, two stacked on the right.
+  // Vice Grid: one big hero panel on the left, two stacked panels on the right.
   const heroW = w * 0.60;
   const colX = heroW + g;
   const colW = w - colX - g;
@@ -135,7 +134,7 @@ function drawPhotoPanel(ctx, panel, photo, grade, noir) {
   } else {
     ctx.translate(panel.x, panel.y);
   }
-  // Polaroid-style white frame on the snapshot layout, ink frame elsewhere.
+  // Tilted snapshot panels get a wide polaroid-style white edge; the rest get ink.
   const frame = panel.rot ? Math.max(8, panel.w * 0.045) : Math.max(3, panel.w * 0.006);
   ctx.fillStyle = panel.rot ? PAPER : INK;
   ctx.fillRect(-frame, -frame, panel.w + frame * 2, panel.h + frame * 2);
@@ -150,13 +149,13 @@ function drawPhotoPanel(ctx, panel, photo, grade, noir) {
     const dx = (panel.w - dw) / 2 + (photo.ox || 0) * panel.w;
     const dy = (panel.h - dh) / 2 + (photo.oy || 0) * panel.h;
     ctx.save();
-    // A flipped panel mirrors its photo left-to-right, wash and frame untouched.
+    // Flipping mirrors only the photo; the wash and frame stay where they are.
     if (photo.flip) { ctx.translate(panel.w, 0); ctx.scale(-1, 1); }
     if (noir) ctx.filter = 'grayscale(1) contrast(1.18) brightness(1.04)';
     ctx.drawImage(photo.img, dx, dy, dw, dh);
     ctx.restore();
   } else {
-    // Empty panel: a sunset placeholder so the grid still reads as a poster.
+    // No photo yet: a sunset placeholder keeps the grid reading as a poster.
     const ph = ctx.createLinearGradient(0, 0, panel.w, panel.h);
     ph.addColorStop(0, '#3a1c5c');
     ph.addColorStop(1, '#7a2a6d');
@@ -168,7 +167,7 @@ function drawPhotoPanel(ctx, panel, photo, grade, noir) {
     ctx.textBaseline = 'middle';
     ctx.fillText('ADD A PHOTO', panel.w / 2, panel.h / 2);
   }
-  // Grade wash: warm top light, deep colour at the foot of the panel.
+  // The grade wash: warm light at the top, deep colour at the foot of the panel.
   const wash = ctx.createLinearGradient(0, 0, 0, panel.h);
   wash.addColorStop(0, grade.top);
   wash.addColorStop(1, grade.bottom);
@@ -176,14 +175,14 @@ function drawPhotoPanel(ctx, panel, photo, grade, noir) {
   ctx.fillRect(0, 0, panel.w, panel.h);
   ctx.fillStyle = grade.wash;
   ctx.fillRect(0, 0, panel.w, panel.h);
-  // Inked inner edge, so each panel reads as a printed poster tile.
+  // An inked inner edge makes each panel read as a printed poster tile.
   ctx.strokeStyle = 'rgba(22,10,36,0.55)';
   ctx.lineWidth = Math.max(2, panel.w * 0.006);
   ctx.strokeRect(0, 0, panel.w, panel.h);
   ctx.restore();
 }
 
-/** A simple palm silhouette: trunk arc plus five fronds. */
+/** One palm silhouette: a curving trunk with five fronds. */
 function drawPalm(ctx, x, y, s, color) {
   ctx.save();
   ctx.translate(x, y);
@@ -208,7 +207,7 @@ function drawPalm(ctx, x, y, s, color) {
   ctx.restore();
 }
 
-/** The poster sun: a glowing disc cut by horizontal slits, classic loading-screen style. */
+/** The poster sun: a glowing disc cut by horizontal slits, loading-screen style. */
 function drawStripedSun(ctx, x, y, r, color, skyTop) {
   const glow = ctx.createRadialGradient(x, y, r * 0.2, x, y, r * 2.4);
   glow.addColorStop(0, color);
@@ -222,7 +221,7 @@ function drawStripedSun(ctx, x, y, r, color, skyTop) {
   ctx.clip();
   ctx.fillStyle = color;
   ctx.fillRect(x - r, y - r, r * 2, r * 2);
-  // Slits widen toward the sun's foot, so it fades into the horizon.
+  // The slits widen toward the sun's foot, so it fades into the horizon.
   ctx.fillStyle = skyTop;
   for (let i = 0; i < 4; i++) {
     const sy = y + r * (0.05 + i * 0.22);
@@ -283,7 +282,7 @@ function drawSky(ctx, w, h, grade) {
   drawSunRays(ctx, sunX, sunY, sunR, grade.sun);
   drawStripedSun(ctx, sunX, sunY, sunR, grade.sun, grade.sky[0]);
   drawBirds(ctx, w, h, 'rgba(22,10,36,0.55)');
-  // Horizon haze bands.
+  // Soft horizon haze bands.
   ctx.fillStyle = 'rgba(255,255,255,0.07)';
   for (let i = 0; i < 3; i++) ctx.fillRect(0, h * (0.55 + i * 0.05), w, h * 0.012);
   drawPalm(ctx, w * 0.03, h * 0.98, Math.min(w, h) * 0.0022, 'rgba(16,4,32,0.85)');
@@ -357,7 +356,7 @@ function drawTitleBand(ctx, w, h, state, grade) {
     ctx.fillStyle = INK;
     ctx.fillRect(0, y0, w, band);
   }
-  // Neon rule above the band.
+  // The neon rule above the band.
   const rule = ctx.createLinearGradient(0, 0, w, 0);
   rule.addColorStop(0, '#ff2e88');
   rule.addColorStop(0.5, '#ff9a3d');
@@ -379,7 +378,7 @@ function drawTitleBand(ctx, w, h, state, grade) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
-  // Hard offset shadow first, so the letters lift off the band.
+  // A hard offset shadow first, so the letters lift off the band.
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
   ctx.fillText(title, titleSize * 0.045, titleSize * 0.06);
   ctx.strokeStyle = '#14041f';
@@ -389,7 +388,7 @@ function drawTitleBand(ctx, w, h, state, grade) {
   ctx.fillText(title, 0, 0);
   ctx.restore();
 
-  // Script subtitle, right-aligned above the tagline so it never collides with it.
+  // Script subtitle, right-aligned above the tagline so the two never collide.
   const sub = (state.subtitle || '').trim();
   if (sub) {
     const subSize = fitFont(ctx, sub, w * 0.52, band * 0.26, 'Pacifico, cursive');
@@ -405,7 +404,7 @@ function drawTitleBand(ctx, w, h, state, grade) {
     ctx.fillText(sub, 0, 0);
     ctx.restore();
   }
-  // Tagline, small caps at the band's foot, left.
+  // Tagline in small caps at the band's foot, on the left.
   const tag = (state.tagline || '').trim().toUpperCase();
   if (tag) {
     ctx.save();
@@ -420,7 +419,7 @@ function drawTitleBand(ctx, w, h, state, grade) {
   // Heat meter: stars at the band's top-right, clear of the script subtitle.
   const starSize = Math.max(7, band * 0.075);
   drawStars(ctx, w - pad - starSize * 7.2, y0 + band * 0.10, starSize, state.heat || 5, grade.sun);
-  // Year badge, top-left corner of the cover.
+  // Year badge in the cover's top-left corner.
   const badgeR = Math.max(20, w * 0.035);
   const bx = badgeR + w * 0.02, by = badgeR + w * 0.02;
   ctx.save();
@@ -439,7 +438,7 @@ function drawTitleBand(ctx, w, h, state, grade) {
   ctx.restore();
 }
 
-/** Thin white poster frame around the whole cover. */
+/** A thin white poster frame around the whole cover. */
 function drawPosterFrame(ctx, w, h) {
   ctx.save();
   ctx.strokeStyle = 'rgba(255,248,238,0.9)';
@@ -450,7 +449,7 @@ function drawPosterFrame(ctx, w, h) {
 
 /**
  * Draws the whole cover for `state` onto `canvas` (sized to the export size).
- * `opts.selection` draws the selected panel's ring (editor preview only, never export).
+ * `opts.selection` draws the selected panel's ring — editor preview only, never export.
  */
 export function drawCover(canvas, state, opts = {}) {
   const ctx = canvas.getContext('2d');

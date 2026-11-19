@@ -1,11 +1,12 @@
-// Neon Shore Cover Studio — a gta6-cover-art-01 entry (Node 22, standard library only).
-// The app is this directory's app/ folder: plain static files a desktop browser loads
-// offline (app/index.html and its ES modules, three SIL OFL fonts and two sample photos
-// made for make.fun, no network request). This program hands it in: it copies app/ and
-// screenshots/ from beside this file to /output and writes /output/dossier.json, the
-// summary the judge reads, with the vendored make.fun library.
+// Neon Shore Cover Studio — the gta6-cover-art-01 entry program (Node 22, stdlib only).
+// The app is this folder's app/ directory: plain static files a desktop browser loads
+// offline — app/index.html with its ES modules, three SIL OFL fonts and two sample
+// photos made for make.fun, and no network request at all. This program hands the
+// entry in: it copies app/ and screenshots/ from beside this file into /output and
+// writes /output/dossier.json, the summary the judge reads, using the vendored
+// make.fun library.
 //
-// Serve it locally with `node serve.ts`, then open http://localhost:8080.
+// Try it locally with `node serve.ts`, then open http://localhost:8080.
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
@@ -18,7 +19,7 @@ const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
 // The scorer's own caps (reference/gate.json): app/ holds at most 993 files and
-// directories and 48 MiB in all, screenshots/ at most 4 files of 256 KiB each. Refuse
+// directories totalling 48 MiB, screenshots/ at most 4 files of 256 KiB each. Refuse
 // early, with a plain message, rather than handing in an entry the scorer refuses.
 // A symlink anywhere in the handed-in trees is refused too: the gate only accepts
 // plain files and directories, and a link could point outside the entry.
@@ -49,8 +50,8 @@ cpSync(join(here, 'app'), join(out, 'app'), { recursive: true });
 mkdirSync(join(out, 'screenshots'), { recursive: true });
 if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
 
-// buildDossier writes the judge's view of the entry from what was just copied, so the
-// dossier always matches the handed-in files byte for byte.
+// buildDossier writes the judge's view from what was just copied, so the dossier
+// always matches the handed-in files byte for byte.
 writeFileSync(
   join(out, 'dossier.json'),
   buildDossier(out, {

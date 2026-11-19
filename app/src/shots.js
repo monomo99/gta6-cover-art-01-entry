@@ -1,10 +1,10 @@
-// Fixed scenes for screenshots: ?shot=editor shows the page with sample photos loaded;
-// ?shot=cover shows the exported cover alone. Query knobs: layout, grade, size, title,
-// subtitle, tagline, heat, photo (one sample for every panel), panels (a comma list of
-// samples, one per panel), zooms (a comma list of zoom factors, one per panel), flips
-// (a comma list of 0/1, one per panel), oxs / oys (comma lists of offsets, one per
-// panel) and frame=0 (poster frame off). window.__shotReady is set once the cover
-// is painted.
+// Fixed scenes for screenshots: ?shot=editor shows the page with sample photos in
+// place; ?shot=cover shows the exported cover on its own. Query knobs: layout,
+// grade, size, title, subtitle, tagline, heat, photo (one sample for every panel),
+// panels (a comma list of samples, one per panel), zooms (zoom factors, one per
+// panel), flips (a comma list of 0/1, one per panel), oxs / oys (offset lists, one
+// per panel) and frame=0 (poster frame off). window.__shotReady is set once the
+// cover has been painted.
 
 import { drawCover, SIZES } from './cover.js';
 import { freshState, panelsForLayout, clampPanelCrop } from './state.js';
@@ -29,12 +29,12 @@ async function loadFonts() {
   } catch (_) { /* fall back to system fonts */ }
 }
 
-/** Parses a comma list of numbers, keeping only the finite ones, in order. */
+/** A comma list of numbers, keeping only the finite entries, in order. */
 export function numberList(raw) {
   return String(raw || '').split(',').map((s) => Number(s.trim())).filter((n) => Number.isFinite(n));
 }
 
-/** Builds the scene state from the query and paints it. `apply` hands the state to the editor. */
+/** Build the scene state from the query and paint it. `apply` hands the state to the editor. */
 export async function runShot(shot, query, apply) {
   const state = freshState();
   state.layout = query.get('layout') || 'vice-grid';

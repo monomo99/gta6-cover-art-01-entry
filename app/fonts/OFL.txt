@@ -2,11 +2,12 @@ Copyright 2020 The Anton Project Authors (https://github.com/googlefonts/AntonFo
 Copyright 2019 The Bebas Neue Project Authors (https://github.com/dharmatype/Bebas-Neue)
 Copyright 2018 The Pacifico Project Authors (https://github.com/googlefonts/Pacifico)
 
-The three fonts shipped under app/fonts/ (Anton-Regular.ttf, BebasNeue-Regular.ttf,
-Pacifico-Regular.ttf) are each licensed under the SIL Open Font License, Version 1.1,
-copied in full below. This file carries every font's copyright notice, as the license
-requires for a bundled copy. Rewritten for the Neon Shore Cover Studio entry; the
-license text below is unchanged.
+The fonts bundled with this entry under app/fonts/ — Anton-Regular.ttf,
+BebasNeue-Regular.ttf and Pacifico-Regular.ttf — are each released under the
+SIL Open Font License, Version 1.1. That license is reproduced in full below,
+and this file holds the copyright notice for every one of the three fonts, as
+the license asks of any bundled copy. The wording of the license itself is
+untouched; only this heading is the entry's own.
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:

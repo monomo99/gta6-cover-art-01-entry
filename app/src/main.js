@@ -1,7 +1,7 @@
-// Neon Shore Cover Studio — wires the editor: pick photos, crop and position them per
-// panel, flip a panel's photo, choose a layout, grade and size, letter the caption,
-// export PNGs. A `?shot=` query sets up a fixed scene for a screenshot instead
-// (./shots.js).
+// Neon Shore Cover Studio — the editor wiring: load photos, crop and place them per
+// panel, flip one panel's photo, pick a layout, grade and size, letter the caption
+// and export PNGs. A `?shot=` query instead builds a fixed scene for a screenshot
+// (see ./shots.js).
 
 import { drawCover, GRADES, LAYOUTS, SIZES, lastPanels } from './cover.js';
 import { freshState, panelsForLayout, serializeState, restoreState, makeHistory, clampPanelCrop, emptyPanel, resetPanelCrop, filledPanelCount } from './state.js';
@@ -224,7 +224,7 @@ $('zoom').addEventListener('input', (e) => {
   clampPanelCrop(panel);
   redraw();
 });
-// The slider drag is one undo step: commit when the drag ends, not on every tick.
+// A slider drag is one undo step: commit when the drag ends, not on every tick.
 $('zoom').addEventListener('change', () => { commit(); });
 $('centerPhoto').addEventListener('click', () => {
   const panel = state.panels[state.selected];

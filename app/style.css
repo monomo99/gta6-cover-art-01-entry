@@ -1,3 +1,6 @@
+/* Neon Shore Cover Studio — the editor chrome: dark violet shell, neon accents.
+   The cover itself is painted on canvas by app/src/cover.js; this file only
+   dresses the controls and the preview stage around it. */
 @font-face { font-family: 'Anton'; src: url('./fonts/Anton-Regular.ttf') format('truetype'); font-display: swap; }
 @font-face { font-family: 'Pacifico'; src: url('./fonts/Pacifico-Regular.ttf') format('truetype'); font-display: swap; }
 @font-face { font-family: 'Bebas Neue'; src: url('./fonts/BebasNeue-Regular.ttf') format('truetype'); font-display: swap; }
@@ -14,6 +17,7 @@ html, body { margin: 0; min-height: 100%; background: #12081f; color: #f5eefc; f
 .topbar p.steps strong:nth-of-type(1) { color: #ff9a3d; }
 .topbar p.steps strong:nth-of-type(2) { color: #ff2e88; }
 .topbar p.steps strong:nth-of-type(3) { color: #00e5ff; }
+/* The two-column shell: sticky controls left, preview stage right. */
 .app { display: flex; gap: 28px; align-items: flex-start; justify-content: center; padding: 16px 28px 28px; box-sizing: border-box; }
 .controls { display: flex; flex-direction: column; gap: 16px; width: 320px; flex: none; position: sticky; top: 16px; align-self: flex-start; max-height: calc(100vh - 32px); overflow-y: auto; scrollbar-width: thin; }
 .group { background: #1d0f31; border: 1px solid #3a2360; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
@@ -32,6 +36,7 @@ input[type=text], select {
 input[type=text]:focus, select:focus { outline: none; border-color: #ff2e88; }
 input[type=range] { width: 100%; accent-color: #ff2e88; }
 input[type=checkbox] { accent-color: #ff2e88; width: 16px; height: 16px; }
+/* Buttons, inputs and the status line. */
 .row { display: flex; gap: 8px; }
 .row.wrap { flex-wrap: wrap; }
 button {
@@ -53,6 +58,7 @@ button.flip-on { background: #00e5ff; border-color: #00e5ff; color: #160a24; }
 .swatch.dusk { border-left: 6px solid #b388ff; }
 .swatch.noir { border-left: 6px solid #e8e8ec; }
 #status { margin: 0; min-height: 20px; color: #8fe3d0; font-size: 13px; }
+/* The preview stage and the full-frame screenshot mode (?shot=cover). */
 .stage { display: flex; flex-direction: column; gap: 10px; align-items: center; }
 .stage canvas {
   width: min(78vh, 62vw); max-height: 82vh; height: auto; aspect-ratio: auto;

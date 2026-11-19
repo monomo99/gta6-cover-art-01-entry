@@ -1,11 +1,13 @@
-// Neon Shore Cover Studio — editor state: one cover, its panels and its history.
-// A panel photo is { img, src, zoom, ox, oy, flip }: img is the loaded Image, src is
-// the serialisable form ('sample:<name>' or a data: URL), zoom/ox/oy crop and position
-// it, flip mirrors it horizontally. The cover also carries a poster `frame` toggle.
+// Neon Shore Cover Studio — the editor's state, kept apart from the drawing.
+// A cover is one plain object: its layout, grade, export size, caption words, a
+// heat rating, three effect switches, which panel is selected, and the panels
+// themselves. One panel's photo is { img, src, zoom, ox, oy, flip } — img is the
+// live Image element, src is the form that survives a save ('sample:<name>' or a
+// data: URL), zoom/ox/oy place and crop the photo, and flip mirrors it.
 
 import { LAYOUTS } from './cover.js';
 
-/** A fresh cover: Vice Grid, Sunset Strip grade, square size, empty panels, frame on. */
+/** A brand-new cover: Vice Grid, the Sunset Strip grade, square, frame switched on. */
 export function freshState() {
   return {
     layout: 'vice-grid',
@@ -23,22 +25,22 @@ export function freshState() {
   };
 }
 
-/** One empty photo slot, with the flip switch off. */
+/** A single empty photo slot, mirror switch off. */
 export function emptyPanel() {
   return { img: null, src: null, zoom: 1, ox: 0, oy: 0, flip: false };
 }
 
-/** How many photo slots a layout shows. */
+/** How many photo slots a given layout shows. */
 export function panelCountForLayout(layout) {
   return (LAYOUTS[layout] || LAYOUTS['vice-grid']).panels;
 }
 
-/** Panel slots for a layout, each an empty photo slot. */
+/** A fresh set of empty slots for a layout. */
 export function emptyPanels(layout) {
   return Array.from({ length: panelCountForLayout(layout) }, () => emptyPanel());
 }
 
-/** Resize the panel list when the layout changes, keeping photos that still fit. */
+/** Grow or shrink the panel list when the layout changes, keeping photos that fit. */
 export function panelsForLayout(state, layout) {
   const n = panelCountForLayout(layout);
   const kept = state.panels.slice(0, n);
@@ -46,7 +48,7 @@ export function panelsForLayout(state, layout) {
   return kept;
 }
 
-/** Clamps a panel's crop so the photo can never be dragged out of its frame. */
+/** Keep a panel's crop inside its frame: the photo can never be dragged out of view. */
 export function clampPanelCrop(panel) {
   panel.zoom = Math.max(1, Math.min(4, panel.zoom || 1));
   panel.ox = Math.max(-0.5, Math.min(0.5, panel.ox || 0));
@@ -55,7 +57,7 @@ export function clampPanelCrop(panel) {
   return panel;
 }
 
-/** Resets a panel's crop to the full photo, centred — the mirror switch stays put. */
+/** Back to the full photo, centred — the mirror switch stays as it was. */
 export function resetPanelCrop(panel) {
   panel.zoom = 1;
   panel.ox = 0;
@@ -63,12 +65,12 @@ export function resetPanelCrop(panel) {
   return panel;
 }
 
-/** How many panels hold a photo. */
+/** How many panels currently hold a photo. */
 export function filledPanelCount(state) {
   return state.panels.filter((p) => p && p.img).length;
 }
 
-/** Serialisable state (images as src strings) for undo history. */
+/** The serialisable form of a cover (images as src strings) for the undo history. */
 export function serializeState(state) {
   return JSON.stringify({
     ...state,
@@ -76,7 +78,7 @@ export function serializeState(state) {
   });
 }
 
-/** Restores a serialised state; `resolve` turns a src back into a loaded Image. */
+/** Rebuild a cover from its serialised form; `resolve` turns a src back into an Image. */
 export async function restoreState(json, resolve) {
   const raw = JSON.parse(json);
   const state = { ...raw, frame: raw.frame !== false, panels: [] };
@@ -87,7 +89,7 @@ export async function restoreState(json, resolve) {
   return state;
 }
 
-/** Small undo/redo history over serialised states. */
+/** A small undo/redo history over serialised covers. */
 export function makeHistory(limit = 30) {
   let past = [];
   let future = [];

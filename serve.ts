@@ -1,6 +1,7 @@
-// Serves app/ on http://localhost:8080 for local testing. Static files only, no network.
-// The request path is resolved inside app/ and refused when it climbs out of it.
-// HEAD answers with the headers alone; a port already in use fails with a plain message.
+// Serves app/ at http://localhost:8080 for local testing. Static files only, no
+// network of its own. A request path is resolved inside app/ and refused when it
+// tries to climb out of it. HEAD answers with headers alone; a port already taken
+// fails with a plain message.
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { join, extname, resolve, sep } from 'node:path';

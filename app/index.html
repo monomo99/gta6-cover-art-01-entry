@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Neon Shore Cover Studio — turn your photo and a caption into a GTA-style multi-panel poster, offline in your browser.">
+<meta name="description" content="Neon Shore Cover Studio — turn any photo and a caption into a GTA-style multi-panel poster, right in your browser, offline.">
 <title>Neon Shore — Cover Studio</title>
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
+<!-- Neon Shore Cover Studio: sticky controls on the left, live canvas preview right. -->
 <header class="topbar">
   <h1>Neon Shore <span>Cover Studio</span></h1>
   <p class="steps"><strong>1 · Load a photo</strong> — <strong>2 · Arrange the panels</strong> — <strong>3 · Export your PNG.</strong> Everything runs offline, photos never leave this machine.</p>
@@ -102,9 +103,10 @@
 
   <section class="stage">
     <canvas id="cover" width="1080" height="1080" aria-label="The cover preview"></canvas>
-    <p class="hint">Click a panel to select it · double-click to cycle panels · drag to move the photo · scroll to zoom · <kbd>[</kbd> <kbd>]</kbd> switch panel · arrow keys nudge the photo.</p>
+    <p class="hint">Click a panel to pick it · double-click to move through the panels · drag to shift the photo · scroll to zoom · <kbd>[</kbd> <kbd>]</kbd> switch panel · arrow keys nudge the photo.</p>
   </section>
 </main>
+<!-- The editor: one module script, everything else lives under app/src/. -->
 <script type="module" src="./src/main.js"></script>
 </body>
 </html>
