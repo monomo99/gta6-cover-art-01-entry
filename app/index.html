@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neon Shore — Cover Studio</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>Neon Shore <span>Cover Studio</span></h1>
+  <p>Your photo + a caption, turned into a GTA-style multi-panel poster. Everything runs offline — photos never leave this machine.</p>
+</header>
+<main class="app">
+  <section class="controls" aria-label="Cover controls">
+    <div class="group">
+      <h2>1 · Photos</h2>
+      <p class="hint" id="panelLabel">Panel 1 of 4</p>
+      <label class="file">Choose a photo <input id="photo" type="file" accept="image/*"></label>
+      <div class="row">
+        <button type="button" data-sample="pier">Sample · Pier</button>
+        <button type="button" data-sample="boulevard">Sample · Boulevard</button>
+      </div>
+      <div class="row">
+        <button type="button" id="fillAll">Fill all panels</button>
+        <button type="button" id="clearPanel">Clear panel</button>
+      </div>
+      <label>Zoom <span id="zoomLabel">100%</span>
+        <input id="zoom" type="range" min="100" max="400" value="100">
+      </label>
+      <button type="button" id="centerPhoto">Centre photo</button>
+    </div>
+
+    <div class="group">
+      <h2>2 · Layout</h2>
+      <div class="row wrap">
+        <button type="button" data-layout="vice-grid" class="active">Vice Grid</button>
+        <button type="button" data-layout="nine">Nine Lives</button>
+        <button type="button" data-layout="bleed">Full Bleed</button>
+        <button type="button" data-layout="snapshots">Snapshot Strip</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>3 · Grade</h2>
+      <div class="row wrap">
+        <button type="button" data-grade="sunset" class="active swatch sunset">Sunset Strip</button>
+        <button type="button" data-grade="neon" class="swatch neon">Neon Nights</button>
+        <button type="button" data-grade="golden" class="swatch golden">Golden Hour</button>
+        <button type="button" data-grade="dusk" class="swatch dusk">Palm Dusk</button>
+        <button type="button" data-grade="noir" class="swatch noir">Mono Noir</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>4 · Caption</h2>
+      <label>Title <input id="title" type="text" maxlength="24" value="NEON SHORE"></label>
+      <label>Subtitle <input id="subtitle" type="text" maxlength="40" value="a sunset story"></label>
+      <label>Tagline <input id="tagline" type="text" maxlength="40" value="EST. 2026 · SUNSET STATE"></label>
+      <label>Heat
+        <select id="heat">
+          <option value="1">★</option>
+          <option value="2">★★</option>
+          <option value="3">★★★</option>
+          <option value="4">★★★★</option>
+          <option value="5" selected>★★★★★</option>
+        </select>
+      </label>
+      <div class="row">
+        <label class="check"><input id="grain" type="checkbox" checked> Film grain</label>
+        <label class="check"><input id="vignette" type="checkbox" checked> Vignette</label>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>5 · Export</h2>
+      <div class="row wrap">
+        <button type="button" data-size="1080x1080" class="active">1080 × 1080</button>
+        <button type="button" data-size="1080x1350">1080 × 1350</button>
+        <button type="button" data-size="1920x1080">1920 × 1080</button>
+      </div>
+      <button type="button" id="export" class="primary">Export PNG</button>
+      <button type="button" id="exportAll">Export all three sizes</button>
+      <div class="row">
+        <button type="button" id="undo">Undo</button>
+        <button type="button" id="redo">Redo</button>
+      </div>
+      <p id="status" role="status"></p>
+    </div>
+  </section>
+
+  <section class="stage">
+    <canvas id="cover" width="1080" height="1080" aria-label="The cover preview"></canvas>
+    <p class="hint">Click a panel to select it · drag to move the photo · scroll to zoom.</p>
+  </section>
+</main>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
