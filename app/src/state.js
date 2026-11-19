@@ -6,20 +6,22 @@
 // `focus` marks where each photo's action lives, as fractions of the
 // picture: when a panel is wider or taller than the photo, the crop
 // window centers on that point instead of the dead middle, so the
-// important part stays in frame. Boulevard's chase fills the whole
-// frame, so its focus is the middle; Pier's duo — faces and pistols —
-// sits high in a tall portrait, so its focus rides up at y 0.3: a
-// centered crop would cut their heads off in a wide panel. Pool's duo
-// lounges mid-frame under the helicopter, with the shark swimming
-// below them, so its focus sits just above the middle at y 0.42.
+// important part stays in frame. Club's dancing duo fills the middle
+// of the frame under the disco ball, so its focus sits just below the
+// middle at y 0.45. Jet Ski's two riders cut across the water with the
+// sunset skyline behind them, so its focus sits a touch above the
+// middle at y 0.4, keeping both riders' faces in a wide crop. Rooftop's
+// duo crouches high in the frame while the helicopter sweeps the street
+// below, so its focus rides up at y 0.35: a centered crop would push
+// their heads out of a wide panel.
 const SAMPLE_PHOTOS = {
-  boulevard: { label: 'Boulevard', src: 'samples/boulevard.jpg', focus: { x: 0.5, y: 0.5 } },
-  pier: { label: 'Pier', src: 'samples/pier.jpg', focus: { x: 0.5, y: 0.3 } },
-  pool: { label: 'Pool', src: 'samples/pool.jpg', focus: { x: 0.5, y: 0.42 } },
+  club: { label: 'Club', src: 'samples/club.jpg', focus: { x: 0.5, y: 0.45 } },
+  jetski: { label: 'Jet Ski', src: 'samples/jetski.jpg', focus: { x: 0.5, y: 0.4 } },
+  rooftop: { label: 'Rooftop', src: 'samples/rooftop.jpg', focus: { x: 0.5, y: 0.35 } },
 };
 
 // The order the samples rotate through the panels by default.
-const SAMPLE_KEYS = ['boulevard', 'pier', 'pool'];
+const SAMPLE_KEYS = ['club', 'jetski', 'rooftop'];
 
 // Layouts: how many panels each one shows and what it is called in the UI.
 const LAYOUTS = {
@@ -73,12 +75,14 @@ function freshPanel(photo) {
 
 // The live poster state. Nine panels are kept so every layout has enough;
 // a layout simply uses the first of its panel count.
+// Default cover caption: the cover reads as a GTA 6 cover — big "GTA VI"
+// title with the script "vice city" above it.
 const STATE = {
   layout: 'vice-grid',
   grade: 'sunset',
   size: '1080x1080',
-  title: 'NEON SHORE',
-  subtitle: 'vice city nights',
+  title: 'GTA VI',
+  subtitle: 'vice city',
   frame: true,
   halftone: true,
   birds: true,

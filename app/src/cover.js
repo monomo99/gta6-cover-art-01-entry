@@ -199,7 +199,7 @@ function paintLettering(ctx, W, H, state, grade) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  const words = (state.title || 'NEON SHORE').toUpperCase();
+  const words = (state.title || 'GTA VI').toUpperCase();
   // Fit the title to the width: shrink until it fits.
   let titleSize = Math.round(bandH * 0.4);
   ctx.font = `${titleSize}px Anton, 'Arial Black', sans-serif`;
@@ -260,7 +260,7 @@ function renderCover(canvas, state, images) {
   const panels = activePanels();
   for (let i = 0; i < boxes.length; i++) {
     const box = boxes[i];
-    const panel = panels[i] || freshPanel('boulevard');
+    const panel = panels[i] || freshPanel('club');
     const img = panel.photo === 'custom' ? panel.customImg : images[panel.photo];
     ctx.save();
     ctx.translate(box.x + box.w / 2, box.y + box.h / 2);

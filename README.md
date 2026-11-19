@@ -13,9 +13,10 @@ files; your photos never leave your machine and nothing is uploaded.
 
 - **Three layouts** — Vice Grid (one wide feature panel plus two stacked
   panels), Nine (a 3×3 grid), and Snapshots (three tilted prints in a row).
-- **Any photo** — the two bundled sample photos, or any photo from your own
-  machine via the file picker. Each panel can be flipped, zoomed, and panned
-  on its own, and one photo can fill every panel with a single click.
+- **Any photo** — the three bundled sample photos (Club, Jet Ski, and
+  Rooftop), or any photo from your own machine via the file picker. Each
+  panel can be flipped, zoomed, and panned on its own, and one photo can
+  fill every panel with a single click.
 - **Caption lettering** — a big bold display title plus a script subtitle,
   set in the bundled SIL-licensed Anton and Pacifico fonts.
 - **Colour grades** — Sunset, Neon, Golden, and Dusk, each washing the
