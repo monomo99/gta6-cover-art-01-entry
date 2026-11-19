@@ -1,23 +1,36 @@
 // Neon Shore Cover Studio — shared poster state.
-// Plain classic script: every top-level name here is visible to the later
-// scripts the page loads (cover.js, shots.js, main.js).
+// A plain classic script: every top-level name here is visible to the
+// scripts the page loads after it (cover.js, shots.js, main.js).
 
-// The two bundled sample photos (free to use, shipped under app/samples/).
+// The three bundled sample photos (free to use, shipped under app/samples/).
+// `focus` marks where each photo's action lives, as fractions of the
+// picture: when a panel is wider or taller than the photo, the crop
+// window centers on that point instead of the dead middle, so the
+// important part stays in frame. Boulevard's chase fills the whole
+// frame, so its focus is the middle; Pier's duo — faces and pistols —
+// sits high in a tall portrait, so its focus rides up at y 0.3: a
+// centered crop would cut their heads off in a wide panel. Pool's duo
+// lounges mid-frame under the helicopter, with the shark swimming
+// below them, so its focus sits just above the middle at y 0.42.
 const SAMPLE_PHOTOS = {
-  boulevard: { label: 'Boulevard', src: 'samples/boulevard.jpg' },
-  pier: { label: 'Pier', src: 'samples/pier.jpg' },
+  boulevard: { label: 'Boulevard', src: 'samples/boulevard.jpg', focus: { x: 0.5, y: 0.5 } },
+  pier: { label: 'Pier', src: 'samples/pier.jpg', focus: { x: 0.5, y: 0.3 } },
+  pool: { label: 'Pool', src: 'samples/pool.jpg', focus: { x: 0.5, y: 0.42 } },
 };
+
+// The order the samples rotate through the panels by default.
+const SAMPLE_KEYS = ['boulevard', 'pier', 'pool'];
 
 // Layouts: how many panels each one shows and what it is called in the UI.
 const LAYOUTS = {
-  'vice-grid': { panels: 3, label: 'Vice Grid', hint: 'One wide feature panel plus two stacked panels.' },
-  nine: { panels: 9, label: 'Nine', hint: 'A 3 by 3 grid of panels.' },
-  snapshots: { panels: 3, label: 'Snapshots', hint: 'Three tilted snapshot prints in a row.' },
+  'vice-grid': { panels: 3, label: 'Vice Grid', hint: 'A wide feature panel with two stacked beside it.' },
+  nine: { panels: 9, label: 'Nine', hint: 'Nine panels in a 3 by 3 grid.' },
+  snapshots: { panels: 3, label: 'Snapshots', hint: 'Three leaning snapshot prints in a row.' },
 };
 
-// Colour grades. Each grade carries the sky gradient for the caption band,
-// the tint washed over the photos, the caption colour and the accent colour
-// used for the script subtitle and the frame's inner line.
+// Colour grades. Each grade carries the sky gradient for the lettering
+// band, the tint washed over the photos, the caption colour and the
+// accent colour used for the script subtitle and the frame's inner line.
 const GRADES = {
   sunset: {
     label: 'Sunset',
@@ -69,17 +82,7 @@ const STATE = {
   frame: true,
   halftone: true,
   birds: true,
-  panels: [
-    freshPanel('boulevard'),
-    freshPanel('pier'),
-    freshPanel('boulevard'),
-    freshPanel('pier'),
-    freshPanel('boulevard'),
-    freshPanel('pier'),
-    freshPanel('boulevard'),
-    freshPanel('pier'),
-    freshPanel('boulevard'),
-  ],
+  panels: Array.from({ length: 9 }, (_, i) => freshPanel(SAMPLE_KEYS[i % SAMPLE_KEYS.length])),
 };
 
 // How many panels the current layout shows.
@@ -92,10 +95,9 @@ function activePanels() {
   return STATE.panels.slice(0, activePanelCount());
 }
 
-// Reset every panel to the alternating sample photos.
+// Reset every panel to the sample photos in rotation.
 function resetPanels() {
-  const keys = ['boulevard', 'pier'];
   for (let i = 0; i < STATE.panels.length; i++) {
-    STATE.panels[i] = freshPanel(keys[i % 2]);
+    STATE.panels[i] = freshPanel(SAMPLE_KEYS[i % SAMPLE_KEYS.length]);
   }
 }

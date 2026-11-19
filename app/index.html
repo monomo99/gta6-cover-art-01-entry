@@ -1,119 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Neon Shore Cover Studio — make your own GTA-style cover art</title>
-<meta name="description" content="Turn your photos and a caption into multi-panel GTA-style cover art, offline in your browser. Export as a PNG in 1080x1080, 1080x1350 or 1920x1080.">
-<link rel="icon" href="data:,">
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+  <title>Neon Shore Cover Studio — make your own GTA-style cover art</title>
+  <meta content="Turn your photos and a caption into multi-panel GTA-style cover art, offline in your browser. Export as a PNG in 1080x1080, 1080x1350 or 1920x1080." name="description">
+  <link href="data:," rel="icon">
+  <link href="style.css" rel="stylesheet">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">
-    <span class="brand-mark">NS</span>
-    <div>
-      <h1>Neon Shore Cover Studio</h1>
-      <p>Your photos + a caption = poster-ready cover art. Nothing uploads anywhere.</p>
-    </div>
-  </div>
-  <div class="top-actions">
-    <button id="exportBtn" type="button" class="btn-primary">Export PNG</button>
-  </div>
-</header>
-
-<main class="workspace">
-  <section class="stage" aria-label="Cover preview">
-    <div class="canvas-wrap">
-      <canvas id="preview" width="1080" height="1080"></canvas>
-    </div>
-    <p class="stage-note"><span id="sizeNote">Square · 1080 × 1080</span> · preview is the real export, scaled to fit</p>
-  </section>
-
-  <aside class="controls" aria-label="Cover controls">
-    <section class="group">
-      <h2>1 · Layout</h2>
-      <div class="seg" id="layoutSeg" role="group" aria-label="Layout">
-        <button type="button" data-layout="vice-grid">Vice Grid</button>
-        <button type="button" data-layout="nine">Nine</button>
-        <button type="button" data-layout="snapshots">Snapshots</button>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">NS</span>
+      <div>
+        <h1>Neon Shore Cover Studio</h1>
+        <p>Your photos + a caption = poster-ready cover art. Nothing uploads anywhere.</p>
       </div>
-      <p class="hint" id="layoutHint"></p>
-    </section>
+    </div>
+    <div class="top-actions">
+      <button class="btn-primary" id="exportBtn" type="button">Export PNG</button>
+    </div>
+  </header>
 
-    <section class="group">
-      <h2>2 · Colour grade</h2>
-      <div class="swatches" id="gradeSwatches" role="group" aria-label="Colour grade">
-        <button type="button" data-grade="sunset" style="--g1:#ff9a3d;--g2:#ff5e7a">Sunset</button>
-        <button type="button" data-grade="neon" style="--g1:#ff2e88;--g2:#7b2ff7">Neon</button>
-        <button type="button" data-grade="golden" style="--g1:#ffd166;--g2:#f4a259">Golden</button>
-        <button type="button" data-grade="dusk" style="--g1:#5b4b8a;--g2:#2d2a6b">Dusk</button>
+  <main class="workspace">
+    <section aria-label="Cover preview" class="stage">
+      <div class="canvas-wrap">
+        <canvas height="1080" id="preview" width="1080"></canvas>
       </div>
+      <p class="stage-note"><span id="sizeNote">Square · 1080 × 1080</span> · preview is the real export, scaled to fit</p>
     </section>
 
-    <section class="group">
-      <h2>3 · Caption</h2>
-      <label class="field">Title
-        <input id="titleInput" type="text" value="NEON SHORE" maxlength="24" autocomplete="off">
-      </label>
-      <label class="field">Subtitle (script)
-        <input id="subtitleInput" type="text" value="vice city nights" maxlength="32" autocomplete="off">
-      </label>
-    </section>
+    <aside aria-label="Cover controls" class="controls">
+      <section class="group">
+        <h2>1 · Layout</h2>
+        <div aria-label="Layout" class="seg" id="layoutSeg" role="group">
+          <button data-layout="vice-grid" type="button">Vice Grid</button>
+          <button data-layout="nine" type="button">Nine</button>
+          <button data-layout="snapshots" type="button">Snapshots</button>
+        </div>
+        <p class="hint" id="layoutHint"></p>
+      </section>
 
-    <section class="group">
-      <h2>4 · Panels</h2>
-      <label class="field">Edit panel
-        <select id="panelSelect"></select>
-      </label>
-      <label class="field">Photo
-        <select id="photoSelect">
-          <option value="boulevard">Boulevard (sample)</option>
-          <option value="pier">Pier (sample)</option>
-          <option value="custom">Your photo…</option>
-        </select>
-      </label>
-      <label class="field file-field">Load your own photo
-        <input id="photoFile" type="file" accept="image/*">
-      </label>
-      <label class="check"><input id="flipToggle" type="checkbox"> Flip horizontal</label>
-      <label class="field">Zoom <span class="val" id="zoomVal">1.00×</span>
-        <input id="zoomRange" type="range" min="1" max="2.5" step="0.05" value="1">
-      </label>
-      <label class="field">Pan left / right <span class="val" id="oxVal">0</span>
-        <input id="oxRange" type="range" min="-0.5" max="0.5" step="0.05" value="0">
-      </label>
-      <label class="field">Pan up / down <span class="val" id="oyVal">0</span>
-        <input id="oyRange" type="range" min="-0.5" max="0.5" step="0.05" value="0">
-      </label>
-      <button id="applyAllBtn" type="button" class="btn-ghost">Use this photo in every panel</button>
-    </section>
+      <section class="group">
+        <h2>2 · Colour grade</h2>
+        <div aria-label="Colour grade" class="swatches" id="gradeSwatches" role="group">
+          <button data-grade="sunset" style="--g1:#ff9a3d;--g2:#ff5e7a" type="button">Sunset</button>
+          <button data-grade="neon" style="--g1:#ff2e88;--g2:#7b2ff7" type="button">Neon</button>
+          <button data-grade="golden" style="--g1:#ffd166;--g2:#f4a259" type="button">Golden</button>
+          <button data-grade="dusk" style="--g1:#5b4b8a;--g2:#2d2a6b" type="button">Dusk</button>
+        </div>
+      </section>
 
-    <section class="group">
-      <h2>5 · Finish</h2>
-      <label class="field">Export size
-        <select id="sizeSelect">
-          <option value="1080x1080">Square · 1080 × 1080</option>
-          <option value="1080x1350">Portrait · 1080 × 1350</option>
-          <option value="1920x1080">Landscape · 1920 × 1080</option>
-        </select>
-      </label>
-      <label class="check"><input id="frameToggle" type="checkbox" checked> Bold poster frame</label>
-      <label class="check"><input id="halftoneToggle" type="checkbox" checked> Halftone dots</label>
-      <label class="check"><input id="birdsToggle" type="checkbox" checked> Bird silhouettes</label>
-      <button id="exportBtn2" type="button" class="btn-primary wide">Export PNG</button>
-      <p class="hint">Three steps: pick a layout, drop in your photos, export. The PNG downloads straight to your machine.</p>
-    </section>
-  </aside>
-</main>
+      <section class="group">
+        <h2>3 · Caption</h2>
+        <label class="field">Title
+          <input autocomplete="off" id="titleInput" maxlength="24" type="text" value="NEON SHORE">
+        </label>
+        <label class="field">Subtitle (script)
+          <input autocomplete="off" id="subtitleInput" maxlength="32" type="text" value="vice city nights">
+        </label>
+      </section>
 
-<footer class="foot">
-  <p>Neon Shore Cover Studio — original art made in your browser. No Rockstar Games logos, artwork or fonts. Photos stay on your machine.</p>
-</footer>
+      <section class="group">
+        <h2>4 · Panels</h2>
+        <label class="field">Edit panel
+          <select id="panelSelect"></select>
+        </label>
+        <label class="field">Photo
+          <select id="photoSelect">
+            <option value="boulevard">Boulevard (sample)</option>
+            <option value="pier">Pier (sample)</option>
+            <option value="pool">Pool (sample)</option>
+            <option value="custom">Your photo…</option>
+          </select>
+        </label>
+        <label class="field file-field">Load your own photo
+          <input accept="image/*" id="photoFile" type="file">
+        </label>
+        <label class="check"><input id="flipToggle" type="checkbox"> Flip horizontal</label>
+        <label class="field">Zoom <span class="val" id="zoomVal">1.00×</span>
+          <input id="zoomRange" max="2.5" min="1" step="0.05" type="range" value="1">
+        </label>
+        <label class="field">Pan left / right <span class="val" id="oxVal">0</span>
+          <input id="oxRange" max="0.5" min="-0.5" step="0.05" type="range" value="0">
+        </label>
+        <label class="field">Pan up / down <span class="val" id="oyVal">0</span>
+          <input id="oyRange" max="0.5" min="-0.5" step="0.05" type="range" value="0">
+        </label>
+        <button class="btn-ghost" id="applyAllBtn" type="button">Use this photo in every panel</button>
+      </section>
 
-<script src="src/state.js"></script>
-<script src="src/cover.js"></script>
-<script src="src/shots.js"></script>
-<script src="src/main.js"></script>
+      <section class="group">
+        <h2>5 · Finish</h2>
+        <label class="field">Export size
+          <select id="sizeSelect">
+            <option value="1080x1080">Square · 1080 × 1080</option>
+            <option value="1080x1350">Portrait · 1080 × 1350</option>
+            <option value="1920x1080">Landscape · 1920 × 1080</option>
+          </select>
+        </label>
+        <label class="check"><input checked id="frameToggle" type="checkbox"> Bold poster frame</label>
+        <label class="check"><input checked id="halftoneToggle" type="checkbox"> Halftone dots</label>
+        <label class="check"><input checked id="birdsToggle" type="checkbox"> Bird silhouettes</label>
+        <button class="btn-primary wide" id="exportBtn2" type="button">Export PNG</button>
+        <p class="hint">Three steps: pick a layout, drop in your photos, export. The PNG downloads straight to your machine.</p>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="foot">
+    <p>Neon Shore Cover Studio — original art made in your browser. No Rockstar Games logos, artwork or fonts. Photos stay on your machine.</p>
+  </footer>
+
+  <script src="src/state.js"></script>
+  <script src="src/cover.js"></script>
+  <script src="src/shots.js"></script>
+  <script src="src/main.js"></script>
 </body>
 </html>
