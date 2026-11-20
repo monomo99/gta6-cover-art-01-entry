@@ -1,6 +1,5 @@
-out/
 node_modules/
+out/
+dist/
 .DS_Store
 *.log
-*.tmp
-*.swp

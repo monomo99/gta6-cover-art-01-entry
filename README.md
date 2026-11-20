@@ -2,64 +2,42 @@
 [![rank](https://make.fun/badge/gta6-cover-art-01/monomo99/gta6-cover-art-01-entry/rank.svg)](https://make.fun/bounty/gta6-cover-art-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
 [![reward](https://make.fun/badge/gta6-cover-art-01/monomo99/gta6-cover-art-01-entry/reward.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
 
-# Vice Cover Studio — GTA-style cover art maker
+# Vice City Cover Studio — GTA-style cover art maker
 
-Turn your own photo and a caption into cover art in the style of GTA 6's
-posters: the multi-panel poster look, bold caption lettering, and a Vice City
-sunset or neon colour grade — then export it as a PNG to share.
+Turn a photo + a caption into a GTA 6-style poster. Six multi-panel layouts, five Vice City grades, three OFL display fonts, and exact PNG exports for posts.
 
-Made for the [gta6-cover-art-01 bounty](https://make.fun/bounty/gta6-cover-art-01)
-on make.fun. Everything here is original: no Rockstar Games logo, artwork or
-font. The lettering uses Anton, Bebas Neue and Pacifico, all under the SIL Open
-Font License (see `app/fonts/OFL.txt`).
+## The theme
 
-## What it does
+Vice City, Leonida — the city GTA 6 lives in. Ocean Drive sunsets, Leonida Beach daylight, Vice Nights neon, Palm Dusk, Neon Streets. The samples are original art made for this app (an Ocean Drive hotel row, a Leonida beach, a neon street); the lettering is hand-set in Anton, Bebas Neue and Pacifico. No Rockstar logo, artwork or fonts anywhere.
 
-- **Any photo** — drop in your own photos from your machine, or start from the
-  three built-in sample shots. Photos are read locally and never leave the
-  machine; the app works fully offline.
-- **Multi-panel posters** — six layouts (Hero, Duo, Trio, Quad, Strip,
-  Columns). Fill several panels with one photo or a different photo per panel.
-- **Crop and position each panel** — click a panel to select it, then zoom,
-  pan, flip, or fill every panel with the same photo.
-- **Caption editing** — title, subtitle and tagline, three display fonts,
-  colour swatches, size and tilt.
-- **Sunset and neon grades** — five colour grades (Sunset, Neon, Palm Dusk,
-  Rose, Noir) plus a synthwave sun, palm silhouettes, halftone dots, film
-  grain, scanlines and a poster frame.
-- **Fast export** — one click exports a PNG in the common post sizes:
-  1080 × 1080, 1080 × 1350, or 1920 × 1080.
+## Use it
 
-## Try it offline
+Open `app/index.html` in a desktop browser — it works fully offline, no server, no network. Or serve it locally:
 
 ```sh
-node serve.ts
-# open http://localhost:8080 in desktop Chrome
+node serve.ts 8080
+# then open http://localhost:8080/
 ```
 
-Or serve `app/` with any static file server. No build step, no network
-requests: every script, font and sample image is a file under `app/`.
+1. Pick a layout: Hero, Duo, Trio, Quad, Strip, Columns.
+2. Pick a grade: Ocean Drive, Leonida Beach, Vice Nights, Palm Dusk, Neon Streets.
+3. Pick a photo: one of the three bundled Vice City samples, or upload your own — it never leaves your machine. Click the cover to choose a panel, drag to pan, scroll to zoom, flip it, or use one photo everywhere.
+4. Edit the caption: title, subtitle, tagline, fonts, colour, size, tilt, top or bottom.
+5. Export a real PNG: **1080 × 1080**, **1080 × 1350**, or **1920 × 1080**.
 
-Shortcuts in the editor: `E` exports the PNG, `S` shuffles the look.
+## Files
 
-## Handing it in
-
-```sh
-mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-```
-
-`main.ts` (Node 22, standard library only) copies `app/` and `screenshots/`
-into the output directory and writes `dossier.json` with `buildDossier` from
-`vendor/makefun-app.ts` (the kit's copy, unchanged).
-
-## Screenshots
-
-- `screenshots/1-cover.jpg` — a wide cover the app exported
-- `screenshots/2-editor.jpg` — the editor with photos loaded
-- `screenshots/3-cover-portrait.jpg` — a portrait cover the app exported
-- `screenshots/4-cover-square.jpg` — a square cover the app exported
+- `app/index.html` — the page
+- `app/src/state.js` — grades, layouts, fonts, default state
+- `app/src/cover.js` — the poster renderer (sky, sun, panels, palms, halftone, caption, frame)
+- `app/src/main.js` — controls, uploads, exports
+- `app/style.css` — the neon-dusk UI
+- `app/fonts/` — Anton, Bebas Neue, Pacifico (SIL Open Font License, see `OFL.txt`)
+- `app/samples/` — three original Vice City sample photos
+- `screenshots/` — renders of the app with a photo loaded, plus an exported cover
+- `main.ts` — make.fun entrypoint: copies `app/` + `screenshots/` to the output and writes `dossier.json`
+- `serve.ts` — tiny local static server (optional)
 
 ## License
 
-MIT — see `LICENSE`. The sample photos under `app/samples/` were made with an
-image model for make.fun and are free to use.
+MIT. Fan-made tool, not affiliated with Rockstar Games.

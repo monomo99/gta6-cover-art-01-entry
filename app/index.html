@@ -3,140 +3,72 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vice Cover Studio — GTA-style cover art maker</title>
-<meta name="description" content="Turn your photo and a caption into multi-panel GTA-style cover art with a Vice City sunset or neon grade. Runs offline; exports PNG in 1080x1080, 1080x1350 and 1920x1080.">
-<link rel="stylesheet" href="style.css">
 <link rel="icon" href="data:,">
-<link rel="preload" as="image" href="samples/rooftop.jpg">
-<link rel="preload" as="image" href="samples/club.jpg">
-<link rel="preload" as="image" href="samples/jetski.jpg">
+<title>Vice City Cover Studio — GTA 6 poster maker</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">
-    <span class="brand-sun" aria-hidden="true"></span>
-    <div>
-      <h1>VICE COVER STUDIO</h1>
-      <p>GTA-style poster maker &middot; offline &middot; your photos never leave this machine</p>
-    </div>
-  </div>
-  <div class="top-actions">
-    <button id="shuffleBtn" class="btn ghost" type="button" title="Shuffle layout, grade and caption style">Shuffle look</button>
-    <button id="exportBtnTop" class="btn primary" type="button">Export PNG</button>
-  </div>
+<header>
+  <h1>Vice City Cover Studio</h1>
+  <p>Turn a photo + a caption into a GTA 6-style poster. Leonida nights, Ocean Drive sunsets, neon streets.</p>
 </header>
-
-<main class="workspace">
-  <aside class="controls" aria-label="Cover controls">
-
-    <section class="panel" id="photosPanel">
-      <h2><span class="step">1</span> Photos</h2>
-      <p class="hint">Drop your own photos in, or start from a sample shot.</p>
-      <label class="upload" for="photoInput">+ Add your photos&hellip;
-        <input id="photoInput" type="file" accept="image/*" multiple hidden>
-      </label>
-      <div class="tray" id="photoTray" role="listbox" aria-label="Photo library"></div>
-      <p class="hint small">Click a photo to put it in the selected panel. Photos are read on this machine only.</p>
-    </section>
-
-    <section class="panel" id="layoutPanel">
-      <h2><span class="step">2</span> Layout</h2>
-      <div class="layout-grid" id="layoutGrid" role="radiogroup" aria-label="Panel layout"></div>
-      <div class="panel-tabs" id="panelTabs" aria-label="Select a panel to edit"></div>
-      <div class="panel-editor" id="panelEditor">
-        <div class="row">
-          <label for="zoomRange">Zoom <output id="zoomOut">1.15&times;</output></label>
-          <input id="zoomRange" type="range" min="1" max="3" step="0.01" value="1.15">
-        </div>
-        <div class="row">
-          <label for="panXRange">Pan left&ndash;right <output id="panXOut">50%</output></label>
-          <input id="panXRange" type="range" min="0" max="100" step="1" value="50">
-        </div>
-        <div class="row">
-          <label for="panYRange">Pan up&ndash;down <output id="panYOut">45%</output></label>
-          <input id="panYRange" type="range" min="0" max="100" step="1" value="45">
-        </div>
-        <div class="row buttons">
-          <button id="flipBtn" class="btn small" type="button">Flip photo</button>
-          <button id="fillAllBtn" class="btn small" type="button">Use in all panels</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel" id="captionPanel">
-      <h2><span class="step">3</span> Caption</h2>
-      <label class="field">Title
-        <input id="titleInput" type="text" value="VICE CITY" maxlength="24" autocomplete="off">
-      </label>
-      <label class="field">Subtitle
-        <input id="subInput" type="text" value="NEON NIGHTS" maxlength="32" autocomplete="off">
-      </label>
-      <label class="field">Tagline
-        <input id="tagInput" type="text" value="a sunset story in three panels" maxlength="48" autocomplete="off">
-      </label>
-      <div class="row">
-        <label for="fontSelect">Lettering</label>
-        <select id="fontSelect">
-          <option value="Anton">Anton — heavy block</option>
-          <option value="Bebas Neue">Bebas Neue — tall caps</option>
-          <option value="Pacifico">Pacifico — neon script</option>
-        </select>
-      </div>
-      <div class="row">
-        <label for="sizeRange">Title size <output id="sizeOut">100%</output></label>
-        <input id="sizeRange" type="range" min="60" max="140" step="1" value="100">
-      </div>
-      <div class="row">
-        <label for="tiltRange">Title tilt <output id="tiltOut">-2&deg;</output></label>
-        <input id="tiltRange" type="range" min="-8" max="8" step="1" value="-2">
-      </div>
-      <div class="row">
-        <label>Title colour</label>
-        <div class="swatches" id="titleSwatches"></div>
-      </div>
-      <div class="row">
-        <label for="captionPos">Caption spot</label>
-        <select id="captionPos">
-          <option value="bottom">Bottom banner</option>
-          <option value="top">Top banner</option>
-          <option value="none">No banner (title on art)</option>
-        </select>
-      </div>
-    </section>
-
-    <section class="panel" id="gradePanel">
-      <h2><span class="step">4</span> Grade &amp; effects</h2>
-      <div class="swatches grade" id="gradeSwatches" role="radiogroup" aria-label="Colour grade"></div>
-      <div class="toggles">
-        <label><input id="fxSun" type="checkbox" checked> Synthwave sun</label>
-        <label><input id="fxPalms" type="checkbox" checked> Palm silhouettes</label>
-        <label><input id="fxHalftone" type="checkbox" checked> Halftone dots</label>
-        <label><input id="fxGrain" type="checkbox" checked> Film grain</label>
-        <label><input id="fxScan" type="checkbox"> Scanlines</label>
-        <label><input id="fxFrame" type="checkbox" checked> Poster frame</label>
-      </div>
-    </section>
-
-    <section class="panel" id="exportPanel">
-      <h2><span class="step">5</span> Export</h2>
-      <div class="size-grid" id="sizeGrid" role="radiogroup" aria-label="Export size"></div>
-      <button id="exportBtn" class="btn primary block" type="button">Export PNG</button>
-      <p class="hint small" id="exportNote">Exports the wide 1920 &times; 1080 cover as a PNG download.</p>
-    </section>
-  </aside>
-
-  <section class="stage" aria-label="Live preview">
-    <div class="stage-bar">
-      <span id="stageLabel">Live preview &middot; Wide 1920 &times; 1080</span>
-      <span class="stage-hint">Click a panel in the preview to edit it</span>
+<main>
+  <section class="controls" aria-label="Cover controls">
+    <div>
+      <h2>Layout</h2>
+      <div class="row" id="layout-buttons"></div>
     </div>
-    <div class="canvas-wrap" id="canvasWrap">
-      <canvas id="previewCanvas" width="1920" height="1080"></canvas>
+    <div>
+      <h2>Grade</h2>
+      <div class="swatches" id="grade-swatches"></div>
     </div>
-    <p class="stage-foot">Original art, made on this machine. No Rockstar logo, artwork or font — the lettering is Anton, Bebas Neue and Pacifico (SIL OFL). Shortcuts: <kbd>E</kbd> export PNG, <kbd>S</kbd> shuffle look.</p>
+    <div>
+      <h2>Photo</h2>
+      <div class="thumbs" id="sample-thumbs"></div>
+      <label for="upload-input">Your own photo (stays on this machine)</label>
+      <input type="file" id="upload-input" accept="image/*">
+      <p class="hint" id="panel-label">Panel 1 of 3 — click the cover to pick a panel, drag it to pan, scroll to zoom.</p>
+      <label for="zoom-range">Zoom</label>
+      <input type="range" id="zoom-range" min="0.6" max="3" step="0.05" value="1">
+      <div class="row">
+        <button id="flip-button" type="button">Flip panel</button>
+        <button id="fill-button" type="button">Use this photo everywhere</button>
+      </div>
+    </div>
+    <div>
+      <h2>Caption</h2>
+      <label for="title-input">Title</label>
+      <input type="text" id="title-input" maxlength="24" value="VICE CITY">
+      <label for="subtitle-input">Subtitle</label>
+      <input type="text" id="subtitle-input" maxlength="24" value="LEONIDA">
+      <label for="tagline-input">Tagline</label>
+      <input type="text" id="tagline-input" maxlength="48" value="Welcome back to paradise">
+      <label for="title-font">Title font</label>
+      <select id="title-font"></select>
+      <label for="sub-font">Subtitle font</label>
+      <select id="sub-font"></select>
+      <label>Title colour</label>
+      <div class="swatches" id="title-colors"></div>
+      <label for="size-range">Title size</label>
+      <input type="range" id="size-range" min="0.6" max="1.5" step="0.05" value="1">
+      <label for="tilt-range">Title tilt (degrees)</label>
+      <input type="range" id="tilt-range" min="-12" max="12" step="1" value="-4">
+      <label for="banner-select">Caption position</label>
+      <select id="banner-select">
+        <option value="top">Top</option>
+        <option value="bottom">Bottom</option>
+      </select>
+    </div>
+  </section>
+  <section class="stage" aria-label="Cover preview">
+    <canvas id="stage" width="960" height="960"></canvas>
+    <div class="export-row" id="export-buttons"></div>
+    <p class="hint">Exports are exact PNGs: 1080 × 1080, 1080 × 1350, 1920 × 1080. Works fully offline — open this file in a desktop browser, no server needed.</p>
   </section>
 </main>
-
+<footer>
+  Fan-made poster tool. Not affiliated with Rockstar Games. Fonts Anton, Bebas Neue and Pacifico are under the SIL Open Font License (see app/fonts/OFL.txt). Sample photos are original art made for this app.
+</footer>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>

@@ -1,38 +1,46 @@
-// Vice Cover Studio — entry program for make.fun's gta6-cover-art-01 bounty.
-//
-// It hands the app in: it copies app/ and screenshots/ from this repository
-// into the output directory and writes dossier.json there with buildDossier
-// from vendor/makefun-app.ts (the kit's copy, unchanged). Outside the grader,
-// MAKEFUN_OUTPUT_DIR stands in for /output. Node 22, standard library only,
-// no install and no build step.
-
-import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+// Vice City Cover Studio — make.fun entrypoint (Node 22, stdlib only).
+// Copies app/ and screenshots/ into the output directory and writes
+// dossier.json from them with the kit's vendor/makefun-app.ts.
+// Usage: MAKEFUN_OUTPUT_DIR=<dir> node main.ts   (defaults to ./out)
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { buildDossier } from './vendor/makefun-app.ts';
 
-const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)));
-const OUTPUT_DIR = resolve(process.env.MAKEFUN_OUTPUT_DIR ?? '/output');
+const root = process.env.MAKEFUN_BOT_DIR ?? process.cwd();
+const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? join(root, 'out');
 
-function copyEntry(name: string): void {
-  const from = join(REPO_ROOT, name);
-  const to = join(OUTPUT_DIR, name);
-  if (!existsSync(from)) throw new Error(`main.ts: ${name}/ is missing from the repository`);
-  cpSync(from, to, { recursive: true });
+const appDir = join(root, 'app');
+const shotsDir = join(root, 'screenshots');
+
+if (!existsSync(appDir)) throw new Error('app/: no such directory');
+if (!existsSync(join(appDir, 'index.html'))) throw new Error('app/index.html: missing');
+if (!existsSync(shotsDir)) throw new Error('screenshots/: no such directory');
+
+// Refuse anything that is not a real PNG or JPEG in screenshots/: the
+// dossier only accepts those, and a stray file (or an HTML error page
+// saved as .jpg) would fail the build later with a worse message.
+const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+const JPEG_MAGIC = [0xff, 0xd8, 0xff];
+const isImage = (bytes) =>
+  PNG_MAGIC.every((b, i) => bytes[i] === b) || JPEG_MAGIC.every((b, i) => bytes[i] === b);
+const shotNames = readdirSync(shotsDir).filter((n) => !n.startsWith('.'));
+if (shotNames.length === 0) throw new Error('screenshots/: no images (need 3 or 4)');
+if (shotNames.length > 4) throw new Error(`screenshots/: ${shotNames.length} images, at most 4`);
+for (const name of shotNames) {
+  const bytes = readFileSync(join(shotsDir, name));
+  if (bytes.length > 262144) throw new Error(`screenshots/${name}: ${bytes.length} bytes, over the 262144 allowed`);
+  if (!isImage(bytes)) throw new Error(`screenshots/${name}: not a PNG or JPEG`);
 }
 
-rmSync(OUTPUT_DIR, { recursive: true, force: true });
-mkdirSync(OUTPUT_DIR, { recursive: true });
-copyEntry('app');
-copyEntry('screenshots');
+mkdirSync(outDir, { recursive: true });
+cpSync(appDir, join(outDir, 'app'), { recursive: true });
+cpSync(shotsDir, join(outDir, 'screenshots'), { recursive: true });
 
-const dossier = buildDossier(OUTPUT_DIR, {
+const dossier = buildDossier(outDir, {
   text_max_bytes: 163840,
   screenshots: { max: 4, max_bytes: 262144 },
   app_max_files: 993,
   app_max_bytes: 50331648,
 });
-writeFileSync(join(OUTPUT_DIR, 'dossier.json'), dossier);
-const appCount = readdirSync(join(OUTPUT_DIR, 'app'), { recursive: true }).length;
-const shotCount = readdirSync(join(OUTPUT_DIR, 'screenshots')).length;
-console.log(`Vice Cover Studio: wrote ${OUTPUT_DIR}/dossier.json (${dossier.length} bytes) from ${appCount} app entries and ${shotCount} screenshots`);
+writeFileSync(join(outDir, 'dossier.json'), dossier);
+console.log(`Vice City Cover Studio: ${shotNames.length} screenshots, dossier ${dossier.length} bytes -> ${outDir}`);

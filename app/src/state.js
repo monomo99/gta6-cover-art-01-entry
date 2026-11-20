@@ -1,134 +1,136 @@
-// Vice Cover Studio — state: every knob the editor owns, as plain data.
-// No DOM here, no drawing here: this file only describes a cover.
+// Vice City Cover Studio — state and look tables.
+// Every grade, layout and sample below is original art direction for the
+// fictional city of Vice City, Leonida: sunsets, beaches, neon nights.
+// No Rockstar logo, artwork or fonts are used anywhere in this app.
 
-/** The three post sizes the app exports, in pixels. */
-export const EXPORT_SIZES = {
-  square: { id: 'square', label: 'Square', width: 1080, height: 1080, note: '1080 × 1080 · feed post' },
-  portrait: { id: 'portrait', label: 'Portrait', width: 1080, height: 1350, note: '1080 × 1350 · feed portrait' },
-  wide: { id: 'wide', label: 'Wide', width: 1920, height: 1080, note: '1920 × 1080 · story / banner' },
-};
-
-/** The panel layouts. Each rect is a fraction of the cover: x, y, w, h. */
-export const LAYOUTS = {
-  hero: {
-    id: 'hero', label: 'Hero', panels: 1,
-    rects: [[0, 0, 1, 1]],
-  },
-  duo: {
-    id: 'duo', label: 'Duo', panels: 2,
-    rects: [[0, 0, 0.5, 1], [0.5, 0, 0.5, 1]],
-  },
-  trio: {
-    id: 'trio', label: 'Trio', panels: 3,
-    rects: [[0, 0, 0.55, 1], [0.55, 0, 0.45, 0.5], [0.55, 0.5, 0.45, 0.5]],
-  },
-  quad: {
-    id: 'quad', label: 'Quad', panels: 4,
-    rects: [[0, 0, 0.5, 0.5], [0.5, 0, 0.5, 0.5], [0, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5]],
-  },
-  strip: {
-    id: 'strip', label: 'Strip', panels: 3,
-    rects: [[0, 0, 1, 0.62], [0, 0.62, 0.5, 0.38], [0.5, 0.62, 0.5, 0.38]],
-  },
-  columns: {
-    id: 'columns', label: 'Columns', panels: 3,
-    rects: [[0, 0, 1 / 3, 1], [1 / 3, 0, 1 / 3, 1], [2 / 3, 0, 1 / 3, 1]],
-  },
-};
-
-/** The colour grades. sky is a top-to-bottom gradient; ink is the silhouette colour. */
+// Five grades, each a full palette the renderer draws from.
 export const GRADES = {
-  sunset: {
-    id: 'sunset', label: 'Sunset', swatch: 'linear-gradient(135deg,#2b1055,#ff2e88 55%,#ff9a3d)',
-    sky: ['#2b1055', '#ff2e88', '#ff9a3d'], sun: '#ffd319', sunCore: '#fff3b0',
-    tint: '#ff5e3a', tintAlpha: 0.16, ink: '#160a2e',
+  ocean: {
+    name: 'Ocean Drive',
+    sky: ['#ff9a5a', '#ff5e8a', '#7b2ff7'],
+    sea: '#12b5a5',
+    sun: '#ffd166',
+    ink: '#1c1033',
+    accent: '#ff2e88',
+    sunY: 0.34,
+    palms: true,
+  },
+  beach: {
+    name: 'Leonida Beach',
+    sky: ['#7dd8ff', '#b8f1ff', '#fff3c4'],
+    sea: '#00b3c6',
+    sun: '#fff7ae',
+    ink: '#0b2b3a',
+    accent: '#ff7a1a',
+    sunY: 0.26,
+    palms: true,
+  },
+  nights: {
+    name: 'Vice Nights',
+    sky: ['#0d0620', '#2b1055', '#7597de'],
+    sea: '#1b2a6b',
+    sun: '#ff5da2',
+    ink: '#f5f0ff',
+    accent: '#00e5ff',
+    sunY: 0.3,
+    palms: false,
+  },
+  dusk: {
+    name: 'Palm Dusk',
+    sky: ['#2d1b4e', '#b13a7b', '#ff8c42'],
+    sea: '#4a2b6d',
+    sun: '#ffb347',
+    ink: '#ffe9f3',
+    accent: '#ffd166',
+    sunY: 0.38,
+    palms: true,
   },
   neon: {
-    id: 'neon', label: 'Neon', swatch: 'linear-gradient(135deg,#05001f,#7b2ff7 55%,#00e5ff)',
-    sky: ['#05001f', '#7b2ff7', '#00e5ff'], sun: '#ff2fb3', sunCore: '#ffd7f2',
-    tint: '#7b2ff7', tintAlpha: 0.2, ink: '#020010',
-  },
-  palm: {
-    id: 'palm', label: 'Palm Dusk', swatch: 'linear-gradient(135deg,#062a33,#0e7c7b 55%,#ffb347)',
-    sky: ['#062a33', '#0e7c7b', '#ffb347'], sun: '#ffe66d', sunCore: '#fffbe0',
-    tint: '#0e7c7b', tintAlpha: 0.14, ink: '#041e24',
-  },
-  rose: {
-    id: 'rose', label: 'Rose', swatch: 'linear-gradient(135deg,#3b0a2e,#e0218a 55%,#ffb6c1)',
-    sky: ['#3b0a2e', '#e0218a', '#ffb6c1'], sun: '#ffd319', sunCore: '#fff3b0',
-    tint: '#e0218a', tintAlpha: 0.16, ink: '#26041c',
-  },
-  noir: {
-    id: 'noir', label: 'Noir', swatch: 'linear-gradient(135deg,#0a0a0a,#3a3a3a 55%,#e8e8e8)',
-    sky: ['#0a0a0a', '#3d3d3d', '#cfcfcf'], sun: '#f5f5f5', sunCore: '#ffffff',
-    tint: '#000000', tintAlpha: 0.1, ink: '#000000',
+    name: 'Neon Streets',
+    sky: ['#12041f', '#3d0a5e', '#0d3b4d'],
+    sea: '#0a2540',
+    sun: '#ff2e88',
+    ink: '#e8fff9',
+    accent: '#39ff88',
+    sunY: 0.3,
+    palms: false,
   },
 };
 
-/** The lettering choices. All three fonts ship under app/fonts/ (SIL OFL). */
-export const FONTS = {
-  Anton: { id: 'Anton', label: 'Anton — heavy block', family: "'Anton', 'Arial Narrow', sans-serif" },
-  'Bebas Neue': { id: 'Bebas Neue', label: 'Bebas Neue — tall caps', family: "'Bebas Neue', 'Arial Narrow', sans-serif" },
-  Pacifico: { id: 'Pacifico', label: 'Pacifico — neon script', family: "'Pacifico', cursive" },
+// Six multi-panel layouts. Each entry is a function of (W, H) returning
+// panel rects in the same order as the state's panels array.
+export const LAYOUTS = {
+  hero: (W, H) => [{ x: 0, y: 0, w: W, h: H }],
+  duo: (W, H) => [
+    { x: 0, y: 0, w: W / 2, h: H },
+    { x: W / 2, y: 0, w: W / 2, h: H },
+  ],
+  trio: (W, H) => [
+    { x: 0, y: 0, w: W, h: H * 0.58 },
+    { x: 0, y: H * 0.58, w: W / 2, h: H * 0.42 },
+    { x: W / 2, y: H * 0.58, w: W / 2, h: H * 0.42 },
+  ],
+  quad: (W, H) => [
+    { x: 0, y: 0, w: W / 2, h: H / 2 },
+    { x: W / 2, y: 0, w: W / 2, h: H / 2 },
+    { x: 0, y: H / 2, w: W / 2, h: H / 2 },
+    { x: W / 2, y: H / 2, w: W / 2, h: H / 2 },
+  ],
+  strip: (W, H) => [0, 1, 2, 3].map((i) => ({ x: 0, y: (H / 4) * i, w: W, h: H / 4 })),
+  columns: (W, H) => [
+    { x: 0, y: 0, w: W * 0.34, h: H },
+    { x: W * 0.34, y: 0, w: W * 0.33, h: H },
+    { x: W * 0.67, y: 0, w: W * 0.33, h: H },
+  ],
 };
 
-/** The title colours offered in the editor. */
-export const TITLE_COLORS = ['#ffffff', '#ffd319', '#ff2e88', '#00e5ff', '#ff9a3d', '#160a2e'];
+export const LAYOUT_NAMES = {
+  hero: 'Hero',
+  duo: 'Duo',
+  trio: 'Trio',
+  quad: 'Quad',
+  strip: 'Strip',
+  columns: 'Columns',
+};
 
-/** The sample shots bundled with the app (free to use, made for make.fun). */
-export const SAMPLE_PHOTOS = [
-  { key: 'samples/rooftop.jpg', label: 'Rooftop' },
-  { key: 'samples/club.jpg', label: 'Club' },
-  { key: 'samples/jetski.jpg', label: 'Jet ski' },
+export const FONTS = [
+  { id: 'anton', name: 'Anton', family: 'Anton' },
+  { id: 'bebas', name: 'Bebas Neue', family: 'Bebas Neue' },
+  { id: 'pacifico', name: 'Pacifico', family: 'Pacifico' },
 ];
 
-/** One panel's photo placement. px/py are the focal point, 0..1 across the photo. */
-export function freshPanel(photo) {
-  return { photo, zoom: 1.15, px: 0.5, py: 0.45, flip: false };
-}
+// The three bundled samples: original art direction, drawn for this app.
+export const SAMPLES = [
+  { src: 'samples/ocean-drive.jpg', label: 'Ocean Drive' },
+  { src: 'samples/leonida-beach.jpg', label: 'Leonida Beach' },
+  { src: 'samples/neon-street.jpg', label: 'Neon Street' },
+];
 
-/** The cover a fresh visitor sees: three sample shots in the Trio layout. */
+export const EXPORT_SIZES = [
+  { label: 'Square 1080 × 1080', w: 1080, h: 1080 },
+  { label: 'Portrait 1080 × 1350', w: 1080, h: 1350 },
+  { label: 'Wide 1920 × 1080', w: 1920, h: 1080 },
+];
+
+// Fresh default state for a new cover.
 export function defaultState() {
   return {
-    sizeId: 'wide',
-    layoutId: 'trio',
-    gradeId: 'sunset',
+    layout: 'hero',
+    grade: 'ocean',
+    title: 'VICE CITY',
+    subtitle: 'LEONIDA',
+    tagline: 'Welcome back to paradise',
+    titleFont: 'anton',
+    subFont: 'bebas',
+    titleColor: '#ffffff',
+    banner: 'top',
+    tilt: -4,
+    titleSize: 1.0,
     panels: [
-      freshPanel('samples/rooftop.jpg'),
-      freshPanel('samples/club.jpg'),
-      freshPanel('samples/jetski.jpg'),
-      freshPanel('samples/rooftop.jpg'),
-      freshPanel('samples/club.jpg'),
+      { src: 'samples/ocean-drive.jpg', zoom: 1.0, panX: 0.5, panY: 0.5, flip: false },
+      { src: 'samples/leonida-beach.jpg', zoom: 1.0, panX: 0.5, panY: 0.5, flip: false },
+      { src: 'samples/neon-street.jpg', zoom: 1.0, panX: 0.5, panY: 0.5, flip: false },
     ],
-    caption: {
-      title: 'VICE CITY',
-      sub: 'NEON NIGHTS',
-      tag: 'a sunset story in three panels',
-      font: 'Anton',
-      color: '#ffffff',
-      accent: '#ffd319',
-      size: 1,
-      tilt: -2,
-      position: 'bottom',
-    },
-    effects: { sun: true, palms: true, halftone: true, grain: true, scanlines: false, frame: true },
+    selected: 0,
   };
-}
-
-/** The panel rectangles of a layout in pixels, for a cover of width × height. */
-export function panelRects(layoutId, width, height) {
-  const layout = LAYOUTS[layoutId] ?? LAYOUTS.trio;
-  return layout.rects.map(([fx, fy, fw, fh]) => ({
-    x: fx * width, y: fy * height, w: fw * width, h: fh * height,
-  }));
-}
-
-/** How many panels a layout shows. */
-export function panelCount(layoutId) {
-  return (LAYOUTS[layoutId] ?? LAYOUTS.trio).panels;
-}
-
-/** A deep copy of a state, for shuffle / undo without aliasing. */
-export function cloneState(state) {
-  return JSON.parse(JSON.stringify(state));
 }

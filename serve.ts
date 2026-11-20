@@ -1,46 +1,43 @@
-// Vice Cover Studio — tiny offline static server for trying the app locally.
-// Serves app/ at http://localhost:8080 (or $PORT). No build step, no network:
-// every file it serves is one of the app's own static files.
-
+// Vice City Cover Studio — tiny static server for local preview.
+// Serves app/ over HTTP so the page can be opened from a browser with a
+// clean origin (fonts and samples load the same as from file://, but a
+// server avoids file-URL quirks in some browsers). Nothing leaves the
+// machine; the app itself never makes a network request.
+// Usage: node serve.ts [port]   (default port 8080, serves ./app)
 import { createServer } from 'node:http';
-import { createReadStream, existsSync, statSync } from 'node:fs';
-import { dirname, extname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { extname, join } from 'node:path';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), 'app');
-const PORT = Number(process.env.PORT ?? 8080);
-
-const MIME: Record<string, string> = {
+const MIME = {
   '.html': 'text/html; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.ttf': 'font/ttf',
-  '.woff2': 'font/woff2',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
+  '.txt': 'text/plain; charset=utf-8',
 };
 
+const appDir = join(process.cwd(), 'app');
+const port = Number(process.argv[2] ?? 8080);
+
 const server = createServer((req, res) => {
-  const started = Date.now();
-  res.on('finish', () => {
-    console.log(`${req.method} ${req.url} -> ${res.statusCode} (${Date.now() - started} ms)`);
-  });
-  const path = decodeURIComponent(new URL(req.url ?? '/', 'http://localhost').pathname);
-  const file = resolve(join(ROOT, path === '/' ? 'index.html' : `.${path}`));
-  if (!file.startsWith(ROOT) || !existsSync(file) || !statSync(file).isFile()) {
+  const urlPath = decodeURIComponent((req.url ?? '/').split('?')[0] ?? '/');
+  const rel = urlPath === '/' ? 'index.html' : urlPath.replace(/^\/+/, '');
+  const file = join(appDir, rel);
+  if (!file.startsWith(appDir) || !existsSync(file) || !statSync(file).isFile()) {
     res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
     res.end('not found\n');
     return;
   }
-  res.writeHead(200, { 'content-type': MIME[extname(file)] ?? 'application/octet-stream' });
-  createReadStream(file).pipe(res);
+  const type = MIME[extname(file).toLowerCase()] ?? 'application/octet-stream';
+  res.writeHead(200, { 'content-type': type });
+  res.end(readFileSync(file));
 });
 
-server.listen(PORT, () => {
-  console.log(`Vice Cover Studio: serving app/ at http://localhost:${PORT}`);
+server.listen(port, () => {
+  console.log(`Vice City Cover Studio at http://localhost:${port}/`);
 });
