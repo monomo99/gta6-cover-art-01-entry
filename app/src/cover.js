@@ -1,10 +1,10 @@
-// Neon Shore Cover Studio — poster painter.
+// Neon Shore Cover Studio — the poster painter.
 // Turns the live poster state into pixels on one canvas: photo panels
 // under a colour grade, halftone dots, bird marks, film grain, the
 // caption lettering and the poster border. Plain 2D canvas throughout,
 // no libraries, nothing fetched from anywhere.
 
-// A pocket deterministic random: the same seed always deals the same
+// A small deterministic random: the same seed always deals the same
 // speckle, so a poster never shimmers from one render to the next.
 function mulberry32(seed) {
   let n = seed >>> 0;
@@ -61,11 +61,10 @@ function captionTop(kind, H) {
 }
 
 // Paint one photo so it covers a box: cropped, zoomed, panned, flipped.
-// The crop window centers on the photo's focal point (see SAMPLE_PHOTOS)
+// The crop window centres on the photo's focal point (see SAMPLE_PHOTOS)
 // instead of the dead middle, so a tall portrait still shows its faces
-// and guns inside a wide panel; the panel's own pan then shifts from
-// there. The shift is clamped to the picture's slack, so no bare edge
-// can ever show.
+// inside a wide panel; the panel's own pan then shifts from there. The
+// shift is clamped to the picture's slack, so no bare edge can ever show.
 function paintPhoto(ctx, img, box, panel) {
   const iw = img.naturalWidth || img.width;
   const ih = img.naturalHeight || img.height;

@@ -1,38 +1,38 @@
-// Neon Shore Cover Studio — shared poster state.
-// A plain classic script: every top-level name here is visible to the
+// Neon Shore Cover Studio — the poster's shared state.
+// A plain classic script: everything declared here is visible to the
 // scripts the page loads after it (cover.js, shots.js, main.js).
-
-// The three bundled sample photos (free to use, shipped under app/samples/).
-// `focus` marks where each photo's action lives, as fractions of the
-// picture: when a panel is wider or taller than the photo, the crop
-// window centers on that point instead of the dead middle, so the
-// important part stays in frame. Club's dancing duo fills the middle
-// of the frame under the disco ball, so its focus sits just below the
-// middle at y 0.45. Jet Ski's two riders cut across the water with the
-// sunset skyline behind them, so its focus sits a touch above the
-// middle at y 0.4, keeping both riders' faces in a wide crop. Rooftop's
-// duo crouches high in the frame while the helicopter sweeps the street
-// below, so its focus rides up at y 0.35: a centered crop would push
-// their heads out of a wide panel.
+//
+// The three bundled sample photos, shipped under app/samples/.
+// `focus` is where each photo's action sits, as fractions of the picture
+// (x across, y down). When a panel's shape does not match the photo's,
+// the crop window is centred on that point rather than on the dead
+// middle, so the important part stays in frame. In Club the dancing
+// pair fills the middle of the frame under the disco ball, so its focus
+// sits a little below centre, y 0.45. On the Jet Ski the two riders cut
+// across the water with the sunset skyline behind them, so its focus
+// sits just above the middle, y 0.4, keeping both riders' faces in a
+// wide crop. On the Rooftop the pair crouches high in the frame while a
+// helicopter sweeps the street below, so its focus rides up to y 0.35:
+// a centred crop would push their heads out of a wide panel.
 const SAMPLE_PHOTOS = {
   club: { label: 'Club', src: 'samples/club.jpg', focus: { x: 0.5, y: 0.45 } },
   jetski: { label: 'Jet Ski', src: 'samples/jetski.jpg', focus: { x: 0.5, y: 0.4 } },
   rooftop: { label: 'Rooftop', src: 'samples/rooftop.jpg', focus: { x: 0.5, y: 0.35 } },
 };
 
-// The order the samples rotate through the panels by default.
+// The order the samples cycle through the panels by default.
 const SAMPLE_KEYS = ['club', 'jetski', 'rooftop'];
 
-// Layouts: how many panels each one shows and what it is called in the UI.
+// Layouts: how many panels each one draws, and what the UI calls it.
 const LAYOUTS = {
   'vice-grid': { panels: 3, label: 'Vice Grid', hint: 'A wide feature panel with two stacked beside it.' },
   nine: { panels: 9, label: 'Nine', hint: 'Nine panels in a 3 by 3 grid.' },
   snapshots: { panels: 3, label: 'Snapshots', hint: 'Three leaning snapshot prints in a row.' },
 };
 
-// Colour grades. Each grade carries the sky gradient for the lettering
-// band, the tint washed over the photos, the caption colour and the
-// accent colour used for the script subtitle and the frame's inner line.
+// Colour grades. Each grade carries the sky gradient painted behind the
+// lettering, the tint washed over the photos, the caption colour, and
+// the accent colour used by the script subtitle and the frame's inner line.
 const GRADES = {
   sunset: {
     label: 'Sunset',
@@ -60,7 +60,7 @@ const GRADES = {
   },
 };
 
-// The three post sizes the app exports.
+// The three sizes a poster can be exported at.
 const EXPORT_SIZES = {
   '1080x1080': { w: 1080, h: 1080, label: 'Square · 1080 × 1080' },
   '1080x1350': { w: 1080, h: 1350, label: 'Portrait · 1080 × 1350' },
@@ -73,10 +73,10 @@ function freshPanel(photo) {
   return { photo: photo, flip: false, zoom: 1, ox: 0, oy: 0, customImg: null, customName: '' };
 }
 
-// The live poster state. Nine panels are kept so every layout has enough;
-// a layout simply uses the first of its panel count.
-// Default cover caption: the cover reads as a GTA 6 cover — big "GTA VI"
-// title with the script "vice city" above it.
+// The live poster state. Nine panels are kept so every layout has
+// enough; a layout simply draws the first of its panel count.
+// Default cover caption: the cover reads as a GTA 6 cover — big
+// "GTA VI" title with the script "vice city" floating above it.
 const STATE = {
   layout: 'vice-grid',
   grade: 'sunset',
@@ -89,7 +89,7 @@ const STATE = {
   panels: Array.from({ length: 9 }, (_, i) => freshPanel(SAMPLE_KEYS[i % SAMPLE_KEYS.length])),
 };
 
-// How many panels the current layout shows.
+// How many panels the current layout draws.
 function activePanelCount() {
   return LAYOUTS[STATE.layout].panels;
 }
@@ -99,7 +99,7 @@ function activePanels() {
   return STATE.panels.slice(0, activePanelCount());
 }
 
-// Reset every panel to the sample photos in rotation.
+// Put every panel back on the sample photos, in rotation.
 function resetPanels() {
   for (let i = 0; i < STATE.panels.length; i++) {
     STATE.panels[i] = freshPanel(SAMPLE_KEYS[i % SAMPLE_KEYS.length]);
