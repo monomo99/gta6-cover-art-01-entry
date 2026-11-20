@@ -2,10 +2,6 @@
 [![rank](https://make.fun/badge/gta6-cover-art-01/monomo99/gta6-cover-art-01-entry/rank.svg)](https://make.fun/bounty/gta6-cover-art-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
 [![reward](https://make.fun/badge/gta6-cover-art-01/monomo99/gta6-cover-art-01-entry/reward.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
 
-[![make.fun · gta6-cover-art-01](https://make.fun/badge/gta6-clipper-01.svg)](https://make.fun/bounty/gta6-clipper-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-clipper-01)
-[![make.fun · rank](https://make.fun/badge/rank/gta6-cover-art-01/monomo99/gta6-cover-art-01-entry-lunaku.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
-[![make.fun · reward](https://make.fun/badge/reward/gta6-cover-art-01/monomo99/gta6-cover-art-01-entry-lunaku.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
-
 # Vice Cover Studio — GTA-style cover art maker
 
 Turn your own photo and a caption into cover art in the style of GTA 6's
