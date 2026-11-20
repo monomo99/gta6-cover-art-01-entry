@@ -27,7 +27,7 @@
       <div class="thumbs" id="sample-thumbs"></div>
       <label for="upload-input">Your own photo (stays on this machine)</label>
       <input type="file" id="upload-input" accept="image/*">
-      <p class="hint" id="panel-label">Panel 1 of 3 — click the cover to pick a panel, drag it to pan, scroll to zoom.</p>
+      <p class="hint" id="panel-label">Panel 1 of 6 — click the cover to pick a panel, drag it to pan, scroll to zoom.</p>
       <label for="zoom-range">Zoom</label>
       <input type="range" id="zoom-range" min="0.6" max="3" step="0.05" value="1">
       <div class="row">
@@ -58,6 +58,44 @@
         <option value="top">Top</option>
         <option value="bottom">Bottom</option>
       </select>
+    </div>
+    <div>
+      <h2>GTA HUD</h2>
+      <label for="wanted-select">Wanted level</label>
+      <select id="wanted-select">
+        <option value="0">☆☆☆☆☆ — Clean</option>
+        <option value="1">★☆☆☆☆</option>
+        <option value="2">★★☆☆☆</option>
+        <option value="3" selected>★★★☆☆</option>
+        <option value="4">★★★★☆</option>
+        <option value="5">★★★★★ — Five stars</option>
+      </select>
+      <label for="health-range">Health</label>
+      <input type="range" id="health-range" min="0" max="100" step="1" value="78">
+      <label for="armor-range">Armor</label>
+      <input type="range" id="armor-range" min="0" max="100" step="1" value="45">
+      <label for="district-select">Location stamp</label>
+      <select id="district-select"></select>
+      <label for="mission-name-input">Mission name</label>
+      <input type="text" id="mission-name-input" maxlength="40">
+      <label for="mission-objective-input">Mission objective</label>
+      <input type="text" id="mission-objective-input" maxlength="60">
+      <label for="mission-reward-input">Mission reward</label>
+      <input type="text" id="mission-reward-input" maxlength="16">
+      <div class="row">
+        <button id="heist-button" type="button">🎲 Spin a heist</button>
+      </div>
+      <label for="radio-select">Radio station</label>
+      <select id="radio-select"></select>
+      <label for="now-playing-input">Now playing</label>
+      <input type="text" id="now-playing-input" maxlength="60">
+      <label for="stamp-select">End-card stamp</label>
+      <select id="stamp-select">
+        <option value="none">None</option>
+        <option value="wasted">WASTED</option>
+        <option value="passed">MISSION PASSED</option>
+      </select>
+      <label class="check"><input type="checkbox" id="worn-check"> Worn print (scratches + folds)</label>
     </div>
   </section>
   <section class="stage" aria-label="Cover preview">

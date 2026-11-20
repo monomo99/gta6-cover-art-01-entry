@@ -2,7 +2,7 @@
 // Loads the bundled samples, binds every control to the state, renders the
 // preview, and exports real PNGs at the three post sizes. Photos a user
 // uploads are read with FileReader and never leave this machine.
-import { defaultState, GRADES, LAYOUT_NAMES, FONTS, SAMPLES, EXPORT_SIZES } from './state.js';
+import { defaultState, GRADES, LAYOUT_NAMES, FONTS, SAMPLES, EXPORT_SIZES, DISTRICTS, RADIO_STATIONS, HEIST_POOL } from './state.js';
 import { drawCover, layoutPanels } from './cover.js';
 
 const state = defaultState();
@@ -80,16 +80,22 @@ function buildControls() {
 
   const thumbBox = $('sample-thumbs');
   for (const s of SAMPLES) {
+    const wrap = document.createElement('div');
+    wrap.className = 'thumb';
     const img = document.createElement('img');
     img.src = s.src;
     img.alt = s.label;
-    img.title = s.label;
-    img.onclick = () => {
+    img.title = `${s.label} — ${s.role}`;
+    const role = document.createElement('span');
+    role.textContent = s.role;
+    wrap.appendChild(img);
+    wrap.appendChild(role);
+    wrap.onclick = () => {
       selectedPanel().src = s.src;
-      for (const t of thumbBox.querySelectorAll('img')) t.classList.toggle('active', t === img);
+      for (const t of thumbBox.querySelectorAll('.thumb')) t.classList.toggle('active', t === wrap);
       render();
     };
-    thumbBox.appendChild(img);
+    thumbBox.appendChild(wrap);
   }
 
   const titleFont = $('title-font');
@@ -121,6 +127,24 @@ function buildControls() {
     colorBox.appendChild(b);
   }
   markActive(colorBox, state.titleColor);
+
+  const districtSelect = $('district-select');
+  for (const d of DISTRICTS) {
+    const opt = document.createElement('option');
+    opt.value = d;
+    opt.textContent = d;
+    districtSelect.appendChild(opt);
+  }
+  districtSelect.value = state.district;
+
+  const radioSelect = $('radio-select');
+  for (const st of RADIO_STATIONS) {
+    const opt = document.createElement('option');
+    opt.value = st.id;
+    opt.textContent = st.name;
+    radioSelect.appendChild(opt);
+  }
+  radioSelect.value = state.radio;
 }
 
 function bindInputs() {
@@ -157,6 +181,66 @@ function bindInputs() {
   });
   $('banner-select').addEventListener('change', (e) => {
     state.banner = e.target.value;
+    render();
+  });
+  // GTA HUD bindings.
+  $('wanted-select').value = String(state.wanted);
+  $('wanted-select').addEventListener('change', (e) => {
+    state.wanted = parseInt(e.target.value, 10);
+    render();
+  });
+  $('health-range').value = String(state.health);
+  $('health-range').addEventListener('input', (e) => {
+    state.health = parseInt(e.target.value, 10);
+    render();
+  });
+  $('armor-range').value = String(state.armor);
+  $('armor-range').addEventListener('input', (e) => {
+    state.armor = parseInt(e.target.value, 10);
+    render();
+  });
+  $('district-select').addEventListener('change', (e) => {
+    state.district = e.target.value;
+    render();
+  });
+  $('mission-name-input').value = state.missionName;
+  $('mission-name-input').addEventListener('input', (e) => {
+    state.missionName = e.target.value;
+    render();
+  });
+  $('mission-objective-input').value = state.missionObjective;
+  $('mission-objective-input').addEventListener('input', (e) => {
+    state.missionObjective = e.target.value;
+    render();
+  });
+  $('mission-reward-input').value = state.missionReward;
+  $('mission-reward-input').addEventListener('input', (e) => {
+    state.missionReward = e.target.value;
+    render();
+  });
+  $('heist-button').addEventListener('click', spinHeist);
+  $('radio-select').addEventListener('change', (e) => {
+    state.radio = e.target.value;
+    const station = RADIO_STATIONS.find((s) => s.id === state.radio);
+    if (station) {
+      state.nowPlaying = station.track;
+      $('now-playing-input').value = state.nowPlaying;
+    }
+    render();
+  });
+  $('now-playing-input').value = state.nowPlaying;
+  $('now-playing-input').addEventListener('input', (e) => {
+    state.nowPlaying = e.target.value;
+    render();
+  });
+  $('stamp-select').value = state.stamp;
+  $('stamp-select').addEventListener('change', (e) => {
+    state.stamp = e.target.value;
+    render();
+  });
+  $('worn-check').checked = state.worn;
+  $('worn-check').addEventListener('change', (e) => {
+    state.worn = e.target.checked;
     render();
   });
   $('zoom-range').addEventListener('input', (e) => {
@@ -197,6 +281,21 @@ function bindInputs() {
     b.onclick = () => exportPNG(size.w, size.h);
     exportBox.appendChild(b);
   }
+}
+
+// Spin a heist: random mission name, objective, reward and tagline from
+// the pools — the story changes, the layout and grade stay as they are.
+function spinHeist() {
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  state.missionName = pick(HEIST_POOL.names);
+  state.missionObjective = pick(HEIST_POOL.objectives);
+  state.missionReward = pick(HEIST_POOL.rewards);
+  state.tagline = pick(HEIST_POOL.taglines);
+  $('mission-name-input').value = state.missionName;
+  $('mission-objective-input').value = state.missionObjective;
+  $('mission-reward-input').value = state.missionReward;
+  $('tagline-input').value = state.tagline;
+  render();
 }
 
 async function exportPNG(w, h) {

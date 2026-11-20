@@ -2,7 +2,7 @@
 // Draws the whole poster onto any canvas at any size: grade sky, synthwave
 // sun, photo panels, palm silhouettes, halftone, scanlines, caption, frame.
 // Everything is drawn from the state; no network, no external assets.
-import { GRADES, LAYOUTS } from './state.js';
+import { GRADES, LAYOUTS, RADIO_STATIONS } from './state.js';
 
 /** Panel rects for a layout, with an outer frame margin and a gap between panels. */
 export function layoutPanels(layout, W, H) {
@@ -187,7 +187,7 @@ function drawCaption(ctx, state, W, H, grade) {
   ctx.fillRect(0, bandY, W, bandH);
 
   const cx = W / 2;
-  const cy = top ? H * 0.13 : H * 0.87;
+  const cy = top ? H * 0.13 : H * 0.84;
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(((state.tilt || 0) * Math.PI) / 180);
@@ -220,6 +220,318 @@ function drawCaption(ctx, state, W, H, grade) {
   ctx.font = `${Math.max(11, size * 0.2)}px "${subFont}", sans-serif`;
   ctx.fillStyle = 'rgba(255,255,255,0.92)';
   ctx.fillText(state.tagline || '', 0, size * 0.95);
+  ctx.restore();
+}
+
+/** Rounded-rect path helper. */
+function rr(ctx, x, y, w, h, r) {
+  const rad = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rad, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rad);
+  ctx.arcTo(x + w, y + h, x, y + h, rad);
+  ctx.arcTo(x, y + h, x, y, rad);
+  ctx.arcTo(x, y, x + w, y, rad);
+  ctx.closePath();
+}
+
+/** Truncate text with an ellipsis so it fits maxW. */
+function fitText(ctx, text, maxW) {
+  if (ctx.measureText(text).width <= maxW) return text;
+  let t = text;
+  while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+  return t + '…';
+}
+
+/** WANTED level: gold stars under a small WANTED label, top-right. */
+function drawWanted(ctx, state, W, H) {
+  const m = Math.max(8, Math.min(W, H) * 0.028);
+  const size = Math.max(16, H * 0.028);
+  const gap = size * 0.18;
+  const totalW = size * 5 + gap * 4;
+  const boxW = totalW + size * 0.8;
+  const boxH = size * 2.1;
+  const bx = W - m - boxW;
+  const by = m;
+  ctx.save();
+  rr(ctx, bx, by, boxW, boxH, size * 0.25);
+  ctx.fillStyle = 'rgba(8,2,18,0.55)';
+  ctx.fill();
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'top';
+  ctx.font = `bold ${Math.max(10, size * 0.45)}px "Bebas Neue", sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.fillText('WANTED', W - m - size * 0.4, by + size * 0.14);
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.font = `${size}px sans-serif`;
+  const x0 = bx + size * 0.4;
+  const starY = by + size * 1.35;
+  for (let i = 0; i < 5; i++) {
+    const x = x0 + i * (size + gap);
+    if (i < (state.wanted || 0)) {
+      ctx.fillStyle = '#ffd166';
+      ctx.shadowColor = '#ff9a00';
+      ctx.shadowBlur = size * 0.25;
+    } else {
+      ctx.fillStyle = 'rgba(255,255,255,0.28)';
+      ctx.shadowBlur = 0;
+    }
+    ctx.fillText('★', x, starY);
+  }
+  ctx.restore();
+}
+
+/** Mission briefing card: name, objective, reward. Top-left when the
+ *  caption is at the bottom, just below the caption band when it is top. */
+function drawMissionCard(ctx, state, W, H) {
+  const m = Math.max(8, Math.min(W, H) * 0.028);
+  const pad = Math.max(10, H * 0.014);
+  const w = W * 0.44;
+  const headSize = Math.max(11, H * 0.016);
+  const nameSize = Math.max(14, H * 0.024);
+  const bodySize = Math.max(11, H * 0.015);
+  const h = pad * 2 + headSize + nameSize + bodySize * 2 + Math.max(8, H * 0.02);
+  const x = m;
+  const y = state.banner === 'bottom' ? m : H * 0.31;
+  ctx.save();
+  rr(ctx, x, y, w, h, Math.max(6, H * 0.008));
+  ctx.fillStyle = 'rgba(8,2,18,0.78)';
+  ctx.fill();
+  ctx.strokeStyle = '#ffd166';
+  ctx.lineWidth = Math.max(1.5, H * 0.002);
+  ctx.stroke();
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  let cy = y + pad;
+  ctx.font = `bold ${headSize}px "Bebas Neue", sans-serif`;
+  ctx.fillStyle = '#ffd166';
+  ctx.fillText('MISSION BRIEFING', x + pad, cy);
+  cy += headSize + Math.max(3, H * 0.004);
+  ctx.font = `${nameSize}px "Bebas Neue", sans-serif`;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(fitText(ctx, state.missionName || '', w - pad * 2), x + pad, cy);
+  cy += nameSize + Math.max(3, H * 0.004);
+  ctx.font = `${bodySize}px "Bebas Neue", sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  ctx.fillText(fitText(ctx, state.missionObjective || '', w - pad * 2), x + pad, cy);
+  cy += bodySize + Math.max(3, H * 0.004);
+  ctx.font = `bold ${bodySize}px "Bebas Neue", sans-serif`;
+  ctx.fillStyle = '#39d353';
+  ctx.fillText(`REWARD  ${state.missionReward || ''}`, x + pad, cy);
+  ctx.restore();
+}
+
+/** Location stamp: the district, rotated, top-right under the wanted box. */
+function drawDistrictStamp(ctx, state, W, H, grade) {
+  const m = Math.max(8, Math.min(W, H) * 0.028);
+  const size = Math.max(12, H * 0.02);
+  ctx.save();
+  const text = `${(state.district || '').toUpperCase()} — LEONIDA`;
+  ctx.font = `bold ${size}px "Bebas Neue", sans-serif`;
+  const tw = ctx.measureText(text).width;
+  const w = tw + size * 1.2;
+  const h = size * 1.9;
+  const x = W - m - w;
+  const y = m + H * 0.075;
+  ctx.translate(x + w / 2, y + h / 2);
+  ctx.rotate(-0.06);
+  ctx.strokeStyle = grade.accent;
+  ctx.lineWidth = Math.max(2, size * 0.12);
+  ctx.strokeRect(-w / 2, -h / 2, w, h);
+  ctx.fillStyle = grade.accent;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 0, 1);
+  ctx.restore();
+}
+
+/** Minimap, bottom-right: street grid, beach and a player blip, all code-drawn. */
+function drawMinimap(ctx, W, H, lift) {
+  const m = Math.max(8, Math.min(W, H) * 0.028);
+  const w = W * 0.22;
+  const h = H * 0.16;
+  const x = W - m - w;
+  const y = H - lift - h;
+  ctx.save();
+  rr(ctx, x, y, w, h, Math.max(6, w * 0.04));
+  ctx.fillStyle = 'rgba(6,10,24,0.82)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.lineWidth = Math.max(1, w * 0.006);
+  ctx.stroke();
+  ctx.save();
+  rr(ctx, x, y, w, h, Math.max(6, w * 0.04));
+  ctx.clip();
+  // Sea on the right edge, beach strip, land with streets.
+  ctx.fillStyle = '#0e4a6b';
+  ctx.fillRect(x + w * 0.78, y, w * 0.22, h);
+  ctx.fillStyle = '#e8c98a';
+  ctx.fillRect(x + w * 0.72, y, w * 0.06, h);
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = Math.max(1, w * 0.008);
+  for (let i = 1; i < 5; i++) {
+    ctx.beginPath();
+    ctx.moveTo(x + (w * 0.72 * i) / 5, y);
+    ctx.lineTo(x + (w * 0.72 * i) / 5, y + h);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y + (h * i) / 5);
+    ctx.lineTo(x + w * 0.72, y + (h * i) / 5);
+    ctx.stroke();
+  }
+  // Diagonal causeway.
+  ctx.strokeStyle = '#ffd166';
+  ctx.lineWidth = Math.max(2, w * 0.012);
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.1, y + h * 0.9);
+  ctx.lineTo(x + w * 0.75, y + h * 0.15);
+  ctx.stroke();
+  // Player blip.
+  const bx = x + w * 0.42;
+  const by = y + h * 0.55;
+  ctx.fillStyle = '#ff2e88';
+  ctx.beginPath();
+  ctx.arc(bx, by, Math.max(3, w * 0.02), 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = Math.max(1, w * 0.006);
+  ctx.stroke();
+  // North marker.
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${Math.max(9, h * 0.11)}px "Bebas Neue", sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText('N', x + w * 0.04, y + h * 0.04);
+  ctx.restore();
+  ctx.restore();
+}
+
+/** Health + armor bars, bottom-left. */
+function drawBars(ctx, state, W, H, lift) {
+  const m = Math.max(8, Math.min(W, H) * 0.028);
+  const w = W * 0.3;
+  const barH = Math.max(8, H * 0.014);
+  const gap = Math.max(6, H * 0.012);
+  const labelW = Math.max(46, W * 0.055);
+  const y2 = H - lift - barH;
+  const y1 = y2 - gap - barH;
+  ctx.save();
+  ctx.font = `bold ${Math.max(10, barH * 0.95)}px "Bebas Neue", sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  const bar = (y, value, color, label) => {
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(m + labelW, y, w - labelW, barH);
+    ctx.fillStyle = color;
+    ctx.fillRect(m + labelW, y, (w - labelW) * Math.min(1, Math.max(0, value / 100)), barH);
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(m + labelW, y, w - labelW, barH);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(label, m, y + barH / 2 + 1);
+  };
+  bar(y1, state.health ?? 100, '#39d353', 'HEALTH');
+  bar(y2, state.armor ?? 0, '#7dd3fc', 'ARMOR');
+  ctx.restore();
+}
+
+/** Radio ticker strip along the very bottom edge. */
+function drawRadioTicker(ctx, state, W, H) {
+  const h = Math.max(20, H * 0.038);
+  const y = H - h;
+  ctx.save();
+  ctx.fillStyle = 'rgba(5,2,14,0.85)';
+  ctx.fillRect(0, y, W, h);
+  ctx.fillStyle = '#ff2e88';
+  ctx.fillRect(0, y, W, Math.max(2, h * 0.07));
+  const station = RADIO_STATIONS.find((s) => s.id === state.radio) || RADIO_STATIONS[0];
+  const size = Math.max(11, h * 0.42);
+  const left = Math.max(8, W * 0.02);
+  ctx.font = `${size}px "Bebas Neue", sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffd166';
+  const label = `ON AIR · ${station.name}`;
+  ctx.fillText(label, left, y + h / 2 + 1);
+  const lw = ctx.measureText(label).width;
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  ctx.fillText(
+    fitText(ctx, `NOW PLAYING: ${state.nowPlaying || station.track}`, W - left - lw - size * 2),
+    left + lw + size,
+    y + h / 2 + 1,
+  );
+  ctx.restore();
+}
+
+/** End-card stamp: WASTED or MISSION PASSED across the poster. */
+function drawEndStamp(ctx, state, W, H) {
+  if (!state.stamp || state.stamp === 'none') return;
+  ctx.save();
+  ctx.translate(W / 2, H * 0.46);
+  ctx.rotate(-0.1);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  if (state.stamp === 'wasted') {
+    const size = H * 0.16;
+    ctx.font = `${size}px Anton, sans-serif`;
+    try { ctx.letterSpacing = `${size * 0.12}px`; } catch { /* older canvas */ }
+    ctx.fillStyle = 'rgba(220,220,220,0.92)';
+    ctx.shadowColor = '#000000';
+    ctx.shadowBlur = size * 0.2;
+    ctx.fillText('WASTED', 0, 0);
+  } else {
+    const size = H * 0.075;
+    ctx.font = `${size}px Anton, sans-serif`;
+    const tw = ctx.measureText('MISSION PASSED').width;
+    const pad = size * 0.6;
+    const w = tw + pad * 2;
+    const h = size * 2.1;
+    rr(ctx, -w / 2, -h / 2, w, h, size * 0.2);
+    ctx.fillStyle = 'rgba(8,30,12,0.88)';
+    ctx.fill();
+    ctx.strokeStyle = '#39d353';
+    ctx.lineWidth = Math.max(2, size * 0.06);
+    ctx.stroke();
+    ctx.fillStyle = '#39d353';
+    ctx.fillText('MISSION PASSED', 0, -size * 0.28);
+    ctx.font = `${size * 0.42}px "Bebas Neue", sans-serif`;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(`REWARD  ${state.missionReward || ''}`, 0, size * 0.52);
+  }
+  ctx.restore();
+}
+
+/** Worn-print effect: scratches, fold lines and a faded vignette. */
+function drawWorn(ctx, W, H) {
+  ctx.save();
+  const rand = seeded(Math.floor(W * 11 + H * 3));
+  ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+  for (let i = 0; i < 26; i++) {
+    const x = rand() * W;
+    const y = rand() * H;
+    const len = H * (0.02 + rand() * 0.08);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + (rand() - 0.5) * 10, y + len);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+  ctx.lineWidth = Math.max(2, H * 0.004);
+  ctx.beginPath();
+  ctx.moveTo(0, H * 0.33);
+  ctx.lineTo(W, H * 0.30);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(0, H * 0.66);
+  ctx.lineTo(W, H * 0.69);
+  ctx.stroke();
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
+  vg.addColorStop(0, 'rgba(255,244,214,0)');
+  vg.addColorStop(1, 'rgba(255,244,214,0.16)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, W, H);
   ctx.restore();
 }
 
@@ -290,5 +602,17 @@ export function drawCover(ctx, state, images, W, H) {
   if (grade.palms) drawPalms(ctx, W, H, grade);
   drawTexture(ctx, W, H, W * 7 + H * 13);
   drawCaption(ctx, state, W, H, grade);
+  // GTA HUD, all drawn in code: mission card, wanted stars, district
+  // stamp, minimap, health/armor bars, radio ticker, end-card stamp.
+  drawMissionCard(ctx, state, W, H);
+  drawWanted(ctx, state, W, H);
+  drawDistrictStamp(ctx, state, W, H, grade);
+  const tickerH = Math.max(20, H * 0.038);
+  const lift = tickerH + Math.max(8, Math.min(W, H) * 0.028) * 0.5;
+  drawMinimap(ctx, W, H, lift);
+  drawBars(ctx, state, W, H, lift);
+  drawRadioTicker(ctx, state, W, H);
+  drawEndStamp(ctx, state, W, H);
+  if (state.worn) drawWorn(ctx, W, H);
   drawFrame(ctx, W, H, grade);
 }

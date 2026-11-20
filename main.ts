@@ -1,6 +1,9 @@
 // Vice City Cover Studio — make.fun entrypoint (Node 22, stdlib only).
 // Copies app/ and screenshots/ into the output directory and writes
 // dossier.json from them with the kit's vendor/makefun-app.ts.
+// The app: 6 layouts, 5 grades, 3 OFL fonts, 6 original samples, and a
+// GTA HUD drawn on the poster (wanted stars, minimap, health/armor bars,
+// mission card, radio ticker, district stamp, end-card stamps, worn print).
 // Usage: MAKEFUN_OUTPUT_DIR=<dir> node main.ts   (defaults to ./out)
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -43,4 +46,4 @@ const dossier = buildDossier(outDir, {
   app_max_bytes: 50331648,
 });
 writeFileSync(join(outDir, 'dossier.json'), dossier);
-console.log(`Vice City Cover Studio: ${shotNames.length} screenshots, dossier ${dossier.length} bytes -> ${outDir}`);
+console.log(`Vice City Cover Studio (6 samples, 5 grades, GTA HUD): ${shotNames.length} screenshots, dossier ${dossier.length} bytes -> ${outDir}`);

@@ -99,12 +99,63 @@ export const FONTS = [
   { id: 'pacifico', name: 'Pacifico', family: 'Pacifico' },
 ];
 
-// The three bundled samples: original art direction, drawn for this app.
+// The six bundled samples: original art direction, drawn for this app.
+// Each one carries the role shown under its thumbnail.
 export const SAMPLES = [
-  { src: 'samples/ocean-drive.jpg', label: 'Ocean Drive' },
-  { src: 'samples/leonida-beach.jpg', label: 'Leonida Beach' },
-  { src: 'samples/neon-street.jpg', label: 'Neon Street' },
+  { src: 'samples/ocean-drive.jpg', label: 'Ocean Drive', role: 'THE KINGPIN' },
+  { src: 'samples/leonida-beach.jpg', label: 'Leonida Beach', role: 'THE LOOKOUT' },
+  { src: 'samples/neon-street.jpg', label: 'Neon Street', role: 'THE DEALER' },
+  { src: 'samples/palm-court.jpg', label: 'Palm Court', role: 'THE FIXER' },
+  { src: 'samples/yacht-club.jpg', label: 'Yacht Club', role: 'THE GETAWAY' },
+  { src: 'samples/midnight-diner.jpg', label: 'Midnight Diner', role: 'THE WHEELMAN' },
 ];
+
+// Vice City districts for the location stamp.
+export const DISTRICTS = [
+  'Ocean Drive',
+  'Leonida Beach',
+  'Vice Nights',
+  'Palm Court',
+  'Yacht Club',
+  'Midnight Diner',
+];
+
+// Fictional Vice City radio stations with a default now-playing track each.
+export const RADIO_STATIONS = [
+  { id: 'vicefm', name: 'Vice City FM 98.7', track: 'Neon Coast — “Drive All Night”' },
+  { id: 'leonida', name: 'Radio Leonida 102.4', track: 'Palm Static — “Golden Hour”' },
+  { id: 'oceanam', name: 'Ocean Drive AM 640', track: 'The Sunsets — “Last Summer”' },
+  { id: 'neon', name: 'Neon Nights 89.1', track: 'After Dark — “Midnight Run”' },
+];
+
+// Heist-story pools for the "Spin a heist" button: all original lines.
+export const HEIST_POOL = {
+  names: [
+    'The Ocean Drive Job',
+    'The Palm Court Lift',
+    'The Midnight Diner Score',
+    'The Yacht Club Getaway',
+    'The Neon Street Hustle',
+    'The Leonida Beach Run',
+  ],
+  objectives: [
+    'Lift the pink convertible before dawn',
+    'Swap the briefcase at the marina',
+    'Get the ledger out of the hotel safe',
+    'Drive the getaway car across the causeway',
+    'Trade the diamonds at the diner',
+    'Photograph the whole crew, no faces',
+  ],
+  rewards: ['$250,000', '$180,000', '$420,000', '$95,000', '$1,000,000', '$60,000'],
+  taglines: [
+    'Every light is a promise',
+    'The city never cools down',
+    'Six friends, one long night',
+    'What happens on the drive stays',
+    'Get in, get rich, get out',
+    'Welcome back to paradise',
+  ],
+};
 
 export const EXPORT_SIZES = [
   { label: 'Square 1080 × 1080', w: 1080, h: 1080 },
@@ -126,11 +177,20 @@ export function defaultState() {
     banner: 'top',
     tilt: -4,
     titleSize: 1.0,
-    panels: [
-      { src: 'samples/ocean-drive.jpg', zoom: 1.0, panX: 0.5, panY: 0.5, flip: false },
-      { src: 'samples/leonida-beach.jpg', zoom: 1.0, panX: 0.5, panY: 0.5, flip: false },
-      { src: 'samples/neon-street.jpg', zoom: 1.0, panX: 0.5, panY: 0.5, flip: false },
-    ],
+    // GTA HUD: wanted level, health/armor, district stamp, mission card,
+    // radio ticker, end-card stamp, worn print. All drawn in code.
+    wanted: 3,
+    health: 78,
+    armor: 45,
+    district: 'Ocean Drive',
+    missionName: 'The Ocean Drive Job',
+    missionObjective: 'Lift the pink convertible before dawn',
+    missionReward: '$250,000',
+    radio: 'vicefm',
+    nowPlaying: 'Neon Coast — “Drive All Night”',
+    stamp: 'none',
+    worn: false,
+    panels: SAMPLES.map((s) => ({ src: s.src, zoom: 1.0, panX: 0.5, panY: 0.5, flip: false })),
     selected: 0,
   };
 }
