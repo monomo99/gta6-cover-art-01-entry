@@ -1,107 +1,134 @@
-// Neon Shore Cover Studio — the poster's shared state.
-// A plain classic script: everything declared here is visible to the
-// scripts the page loads after it (cover.js, shots.js, main.js).
-//
-// The three bundled sample photos, shipped under app/samples/.
-// `focus` is where each photo's action sits, as fractions of the picture
-// (x across, y down). When a panel's shape does not match the photo's,
-// the crop window is centred on that point rather than on the dead
-// middle, so the important part stays in frame. In Club the dancing
-// pair fills the middle of the frame under the disco ball, so its focus
-// sits a little below centre, y 0.45. On the Jet Ski the two riders cut
-// across the water with the sunset skyline behind them, so its focus
-// sits just above the middle, y 0.4, keeping both riders' faces in a
-// wide crop. On the Rooftop the pair crouches high in the frame while a
-// helicopter sweeps the street below, so its focus rides up to y 0.35:
-// a centred crop would push their heads out of a wide panel.
-const SAMPLE_PHOTOS = {
-  club: { label: 'Club', src: 'samples/club.jpg', focus: { x: 0.5, y: 0.45 } },
-  jetski: { label: 'Jet Ski', src: 'samples/jetski.jpg', focus: { x: 0.5, y: 0.4 } },
-  rooftop: { label: 'Rooftop', src: 'samples/rooftop.jpg', focus: { x: 0.5, y: 0.35 } },
+// Vice Cover Studio — state: every knob the editor owns, as plain data.
+// No DOM here, no drawing here: this file only describes a cover.
+
+/** The three post sizes the app exports, in pixels. */
+export const EXPORT_SIZES = {
+  square: { id: 'square', label: 'Square', width: 1080, height: 1080, note: '1080 × 1080 · feed post' },
+  portrait: { id: 'portrait', label: 'Portrait', width: 1080, height: 1350, note: '1080 × 1350 · feed portrait' },
+  wide: { id: 'wide', label: 'Wide', width: 1920, height: 1080, note: '1920 × 1080 · story / banner' },
 };
 
-// The order the samples cycle through the panels by default.
-const SAMPLE_KEYS = ['club', 'jetski', 'rooftop'];
-
-// Layouts: how many panels each one draws, and what the UI calls it.
-const LAYOUTS = {
-  'vice-grid': { panels: 3, label: 'Vice Grid', hint: 'A wide feature panel with two stacked beside it.' },
-  nine: { panels: 9, label: 'Nine', hint: 'Nine panels in a 3 by 3 grid.' },
-  snapshots: { panels: 3, label: 'Snapshots', hint: 'Three leaning snapshot prints in a row.' },
+/** The panel layouts. Each rect is a fraction of the cover: x, y, w, h. */
+export const LAYOUTS = {
+  hero: {
+    id: 'hero', label: 'Hero', panels: 1,
+    rects: [[0, 0, 1, 1]],
+  },
+  duo: {
+    id: 'duo', label: 'Duo', panels: 2,
+    rects: [[0, 0, 0.5, 1], [0.5, 0, 0.5, 1]],
+  },
+  trio: {
+    id: 'trio', label: 'Trio', panels: 3,
+    rects: [[0, 0, 0.55, 1], [0.55, 0, 0.45, 0.5], [0.55, 0.5, 0.45, 0.5]],
+  },
+  quad: {
+    id: 'quad', label: 'Quad', panels: 4,
+    rects: [[0, 0, 0.5, 0.5], [0.5, 0, 0.5, 0.5], [0, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5]],
+  },
+  strip: {
+    id: 'strip', label: 'Strip', panels: 3,
+    rects: [[0, 0, 1, 0.62], [0, 0.62, 0.5, 0.38], [0.5, 0.62, 0.5, 0.38]],
+  },
+  columns: {
+    id: 'columns', label: 'Columns', panels: 3,
+    rects: [[0, 0, 1 / 3, 1], [1 / 3, 0, 1 / 3, 1], [2 / 3, 0, 1 / 3, 1]],
+  },
 };
 
-// Colour grades. Each grade carries the sky gradient painted behind the
-// lettering, the tint washed over the photos, the caption colour, and
-// the accent colour used by the script subtitle and the frame's inner line.
-const GRADES = {
+/** The colour grades. sky is a top-to-bottom gradient; ink is the silhouette colour. */
+export const GRADES = {
   sunset: {
-    label: 'Sunset',
-    skyTop: '#ff9a3d', skyMid: '#ff5e7a', skyBottom: '#7a2d8f',
-    tint: '#ff6a3d', tintAlpha: 0.16,
-    caption: '#ffffff', accent: '#ffd166', band: '#1c0b2e',
+    id: 'sunset', label: 'Sunset', swatch: 'linear-gradient(135deg,#2b1055,#ff2e88 55%,#ff9a3d)',
+    sky: ['#2b1055', '#ff2e88', '#ff9a3d'], sun: '#ffd319', sunCore: '#fff3b0',
+    tint: '#ff5e3a', tintAlpha: 0.16, ink: '#160a2e',
   },
   neon: {
-    label: 'Neon',
-    skyTop: '#ff2e88', skyMid: '#7b2ff7', skyBottom: '#0b1035',
-    tint: '#ff2e88', tintAlpha: 0.18,
-    caption: '#ffffff', accent: '#2de2ff', band: '#0b1035',
+    id: 'neon', label: 'Neon', swatch: 'linear-gradient(135deg,#05001f,#7b2ff7 55%,#00e5ff)',
+    sky: ['#05001f', '#7b2ff7', '#00e5ff'], sun: '#ff2fb3', sunCore: '#ffd7f2',
+    tint: '#7b2ff7', tintAlpha: 0.2, ink: '#020010',
   },
-  golden: {
-    label: 'Golden',
-    skyTop: '#ffd166', skyMid: '#f4a259', skyBottom: '#8c4a1f',
-    tint: '#ffb703', tintAlpha: 0.15,
-    caption: '#fff8e7', accent: '#7a2d0e', band: '#3d1c07',
+  palm: {
+    id: 'palm', label: 'Palm Dusk', swatch: 'linear-gradient(135deg,#062a33,#0e7c7b 55%,#ffb347)',
+    sky: ['#062a33', '#0e7c7b', '#ffb347'], sun: '#ffe66d', sunCore: '#fffbe0',
+    tint: '#0e7c7b', tintAlpha: 0.14, ink: '#041e24',
   },
-  dusk: {
-    label: 'Dusk',
-    skyTop: '#5b4b8a', skyMid: '#2d2a6b', skyBottom: '#120e2e',
-    tint: '#6c5ce7', tintAlpha: 0.17,
-    caption: '#f2efff', accent: '#ff9ff3', band: '#120e2e',
+  rose: {
+    id: 'rose', label: 'Rose', swatch: 'linear-gradient(135deg,#3b0a2e,#e0218a 55%,#ffb6c1)',
+    sky: ['#3b0a2e', '#e0218a', '#ffb6c1'], sun: '#ffd319', sunCore: '#fff3b0',
+    tint: '#e0218a', tintAlpha: 0.16, ink: '#26041c',
+  },
+  noir: {
+    id: 'noir', label: 'Noir', swatch: 'linear-gradient(135deg,#0a0a0a,#3a3a3a 55%,#e8e8e8)',
+    sky: ['#0a0a0a', '#3d3d3d', '#cfcfcf'], sun: '#f5f5f5', sunCore: '#ffffff',
+    tint: '#000000', tintAlpha: 0.1, ink: '#000000',
   },
 };
 
-// The three sizes a poster can be exported at.
-const EXPORT_SIZES = {
-  '1080x1080': { w: 1080, h: 1080, label: 'Square · 1080 × 1080' },
-  '1080x1350': { w: 1080, h: 1350, label: 'Portrait · 1080 × 1350' },
-  '1920x1080': { w: 1920, h: 1080, label: 'Landscape · 1920 × 1080' },
+/** The lettering choices. All three fonts ship under app/fonts/ (SIL OFL). */
+export const FONTS = {
+  Anton: { id: 'Anton', label: 'Anton — heavy block', family: "'Anton', 'Arial Narrow', sans-serif" },
+  'Bebas Neue': { id: 'Bebas Neue', label: 'Bebas Neue — tall caps', family: "'Bebas Neue', 'Arial Narrow', sans-serif" },
+  Pacifico: { id: 'Pacifico', label: 'Pacifico — neon script', family: "'Pacifico', cursive" },
 };
 
-// One panel's crop settings. `photo` is a sample key or 'custom';
-// a custom photo keeps its own loaded image on `customImg`.
-function freshPanel(photo) {
-  return { photo: photo, flip: false, zoom: 1, ox: 0, oy: 0, customImg: null, customName: '' };
+/** The title colours offered in the editor. */
+export const TITLE_COLORS = ['#ffffff', '#ffd319', '#ff2e88', '#00e5ff', '#ff9a3d', '#160a2e'];
+
+/** The sample shots bundled with the app (free to use, made for make.fun). */
+export const SAMPLE_PHOTOS = [
+  { key: 'samples/rooftop.jpg', label: 'Rooftop' },
+  { key: 'samples/club.jpg', label: 'Club' },
+  { key: 'samples/jetski.jpg', label: 'Jet ski' },
+];
+
+/** One panel's photo placement. px/py are the focal point, 0..1 across the photo. */
+export function freshPanel(photo) {
+  return { photo, zoom: 1.15, px: 0.5, py: 0.45, flip: false };
 }
 
-// The live poster state. Nine panels are kept so every layout has
-// enough; a layout simply draws the first of its panel count.
-// Default cover caption: the cover reads as a GTA 6 cover — big
-// "GTA VI" title with the script "vice city" floating above it.
-const STATE = {
-  layout: 'vice-grid',
-  grade: 'sunset',
-  size: '1080x1080',
-  title: 'GTA VI',
-  subtitle: 'vice city',
-  frame: true,
-  halftone: true,
-  birds: true,
-  panels: Array.from({ length: 9 }, (_, i) => freshPanel(SAMPLE_KEYS[i % SAMPLE_KEYS.length])),
-};
-
-// How many panels the current layout draws.
-function activePanelCount() {
-  return LAYOUTS[STATE.layout].panels;
+/** The cover a fresh visitor sees: three sample shots in the Trio layout. */
+export function defaultState() {
+  return {
+    sizeId: 'wide',
+    layoutId: 'trio',
+    gradeId: 'sunset',
+    panels: [
+      freshPanel('samples/rooftop.jpg'),
+      freshPanel('samples/club.jpg'),
+      freshPanel('samples/jetski.jpg'),
+      freshPanel('samples/rooftop.jpg'),
+      freshPanel('samples/club.jpg'),
+    ],
+    caption: {
+      title: 'VICE CITY',
+      sub: 'NEON NIGHTS',
+      tag: 'a sunset story in three panels',
+      font: 'Anton',
+      color: '#ffffff',
+      accent: '#ffd319',
+      size: 1,
+      tilt: -2,
+      position: 'bottom',
+    },
+    effects: { sun: true, palms: true, halftone: true, grain: true, scanlines: false, frame: true },
+  };
 }
 
-// The panels the current layout actually draws.
-function activePanels() {
-  return STATE.panels.slice(0, activePanelCount());
+/** The panel rectangles of a layout in pixels, for a cover of width × height. */
+export function panelRects(layoutId, width, height) {
+  const layout = LAYOUTS[layoutId] ?? LAYOUTS.trio;
+  return layout.rects.map(([fx, fy, fw, fh]) => ({
+    x: fx * width, y: fy * height, w: fw * width, h: fh * height,
+  }));
 }
 
-// Put every panel back on the sample photos, in rotation.
-function resetPanels() {
-  for (let i = 0; i < STATE.panels.length; i++) {
-    STATE.panels[i] = freshPanel(SAMPLE_KEYS[i % SAMPLE_KEYS.length]);
-  }
+/** How many panels a layout shows. */
+export function panelCount(layoutId) {
+  return (LAYOUTS[layoutId] ?? LAYOUTS.trio).panels;
+}
+
+/** A deep copy of a state, for shuffle / undo without aliasing. */
+export function cloneState(state) {
+  return JSON.parse(JSON.stringify(state));
 }
