@@ -16,53 +16,79 @@
   <section class="controls" aria-label="Cover controls">
     <div>
       <h2>Layout</h2>
-      <div class="row" id="layout-buttons"></div>
+      <div class="row" id="layout-pick"></div>
+      <div class="row">
+        <button id="surprise-btn" type="button">🎲 Surprise me</button>
+      </div>
+      <p class="hint">Surprise me rolls a whole new poster: layout, grade, heist, title treatment and a sticker.</p>
     </div>
     <div>
       <h2>Grade</h2>
-      <div class="swatches" id="grade-swatches"></div>
-    </div>
-    <div>
-      <h2>Photo</h2>
-      <div class="thumbs" id="sample-thumbs"></div>
-      <label for="upload-input">Your own photo (stays on this machine)</label>
-      <input type="file" id="upload-input" accept="image/*">
-      <p class="hint" id="panel-label">Panel 1 of 6 — click the cover to pick a panel, drag it to pan, scroll to zoom.</p>
-      <label for="zoom-range">Zoom</label>
-      <input type="range" id="zoom-range" min="0.6" max="3" step="0.05" value="1">
+      <div class="swatches" id="grade-pick"></div>
+      <label for="accent-pick">Custom accent colour</label>
       <div class="row">
-        <button id="flip-button" type="button">Flip panel</button>
-        <button id="fill-button" type="button">Use this photo everywhere</button>
+        <input type="color" id="accent-pick" value="#ff2e88">
+        <button id="accent-reset" type="button">Use grade accent</button>
       </div>
     </div>
     <div>
+      <h2>Photo</h2>
+      <div class="thumbs" id="sample-pick"></div>
+      <label for="upload-file">Your own photo (stays on this machine)</label>
+      <input type="file" id="upload-file" accept="image/*">
+      <p class="hint" id="panel-note">Panel 1 of 6 — click the cover to pick a panel, drag it to pan, scroll to zoom.</p>
+      <label for="zoom-slider">Zoom</label>
+      <input type="range" id="zoom-slider" min="0.6" max="3" step="0.05" value="1">
+      <div class="row">
+        <button id="flip-btn" type="button">Flip panel</button>
+        <button id="fill-btn" type="button">Use this photo everywhere</button>
+      </div>
+      <div class="row">
+        <button id="face-mode-btn" type="button">Face focus</button>
+        <button id="face-detect-btn" type="button">Detect faces</button>
+      </div>
+      <p class="hint" id="face-note">Faces are detected when a photo loads, so the crop keeps them in frame. Tap “Face focus”, then tap a face on the cover to pin it.</p>
+    </div>
+    <div>
       <h2>Caption</h2>
-      <label for="title-input">Title</label>
-      <input type="text" id="title-input" maxlength="24" value="VICE CITY">
-      <label for="subtitle-input">Subtitle</label>
-      <input type="text" id="subtitle-input" maxlength="24" value="LEONIDA">
-      <label for="tagline-input">Tagline</label>
-      <input type="text" id="tagline-input" maxlength="48" value="Welcome back to paradise">
-      <label for="title-font">Title font</label>
-      <select id="title-font"></select>
-      <label for="sub-font">Subtitle font</label>
-      <select id="sub-font"></select>
+      <label for="title-text">Title</label>
+      <input type="text" id="title-text" maxlength="24" value="VICE CITY">
+      <label for="subtitle-text">Subtitle</label>
+      <input type="text" id="subtitle-text" maxlength="24" value="LEONIDA">
+      <label for="tagline-text">Tagline</label>
+      <input type="text" id="tagline-text" maxlength="48" value="Welcome back to Leonida">
+      <label for="title-face">Title font</label>
+      <select id="title-face"></select>
+      <label for="sub-face">Subtitle font</label>
+      <select id="sub-face"></select>
+      <label for="title-style">Title treatment</label>
+      <select id="title-style"></select>
       <label>Title colour</label>
       <div class="swatches" id="title-colors"></div>
-      <label for="size-range">Title size</label>
-      <input type="range" id="size-range" min="0.6" max="1.5" step="0.05" value="1">
-      <label for="tilt-range">Title tilt (degrees)</label>
-      <input type="range" id="tilt-range" min="-12" max="12" step="1" value="-4">
-      <label for="banner-select">Caption position</label>
-      <select id="banner-select">
+      <label for="size-slider">Title size</label>
+      <input type="range" id="size-slider" min="0.6" max="1.5" step="0.05" value="1">
+      <label for="tilt-slider">Title tilt (degrees)</label>
+      <input type="range" id="tilt-slider" min="-12" max="12" step="1" value="-4">
+      <label for="banner-pick">Caption position</label>
+      <select id="banner-pick">
         <option value="top">Top</option>
         <option value="bottom">Bottom</option>
       </select>
     </div>
     <div>
+      <h2>Stickers</h2>
+      <div class="row" id="sticker-pick"></div>
+      <div class="row">
+        <button id="sticker-clear" type="button">Clear stickers</button>
+      </div>
+      <p class="hint" id="sticker-note">Pick a sticker, then tap the cover to stamp it.</p>
+    </div>
+    <div>
       <h2>GTA HUD</h2>
-      <label for="wanted-select">Wanted level</label>
-      <select id="wanted-select">
+      <label class="check"><input type="checkbox" id="hud-toggle" checked> Show HUD (uncheck to compare the clean art)</label>
+      <label class="check"><input type="checkbox" id="billing-toggle" checked> Billing block + studio seal</label>
+      <label for="wanted-pick">Wanted level</label>
+      <select id="wanted-pick">
         <option value="0">☆☆☆☆☆ — Clean</option>
         <option value="1">★☆☆☆☆</option>
         <option value="2">★★☆☆☆</option>
@@ -70,43 +96,43 @@
         <option value="4">★★★★☆</option>
         <option value="5">★★★★★ — Five stars</option>
       </select>
-      <label for="health-range">Health</label>
-      <input type="range" id="health-range" min="0" max="100" step="1" value="78">
-      <label for="armor-range">Armor</label>
-      <input type="range" id="armor-range" min="0" max="100" step="1" value="45">
-      <label for="district-select">Location stamp</label>
-      <select id="district-select"></select>
-      <label for="mission-name-input">Mission name</label>
-      <input type="text" id="mission-name-input" maxlength="40">
-      <label for="mission-objective-input">Mission objective</label>
-      <input type="text" id="mission-objective-input" maxlength="60">
-      <label for="mission-reward-input">Mission reward</label>
-      <input type="text" id="mission-reward-input" maxlength="16">
+      <label for="health-slider">Health</label>
+      <input type="range" id="health-slider" min="0" max="100" step="1" value="78">
+      <label for="armor-slider">Armor</label>
+      <input type="range" id="armor-slider" min="0" max="100" step="1" value="45">
+      <label for="district-pick">Location stamp</label>
+      <select id="district-pick"></select>
+      <label for="job-name">Mission name</label>
+      <input type="text" id="job-name" maxlength="40">
+      <label for="job-goal">Mission objective</label>
+      <input type="text" id="job-goal" maxlength="60">
+      <label for="job-reward">Mission reward</label>
+      <input type="text" id="job-reward" maxlength="16">
       <div class="row">
-        <button id="heist-button" type="button">🎲 Spin a heist</button>
+        <button id="heist-btn" type="button">🎲 Spin a heist</button>
       </div>
-      <label for="radio-select">Radio station</label>
-      <select id="radio-select"></select>
-      <label for="now-playing-input">Now playing</label>
-      <input type="text" id="now-playing-input" maxlength="60">
-      <label for="stamp-select">End-card stamp</label>
-      <select id="stamp-select">
+      <label for="radio-pick">Radio station</label>
+      <select id="radio-pick"></select>
+      <label for="track-text">Now playing</label>
+      <input type="text" id="track-text" maxlength="60">
+      <label for="stamp-pick">End-card stamp</label>
+      <select id="stamp-pick">
         <option value="none">None</option>
         <option value="wasted">WASTED</option>
         <option value="passed">MISSION PASSED</option>
       </select>
-      <label class="check"><input type="checkbox" id="worn-check"> Worn print (scratches + folds)</label>
+      <label class="check"><input type="checkbox" id="worn-toggle"> Worn print (scratches + folds)</label>
     </div>
   </section>
   <section class="stage" aria-label="Cover preview">
     <canvas id="stage" width="960" height="960"></canvas>
-    <div class="export-row" id="export-buttons"></div>
-    <p class="hint">Exports are exact PNGs: 1080 × 1080, 1080 × 1350, 1920 × 1080. Works fully offline — open this file in a desktop browser, no server needed.</p>
+    <div class="export-row" id="export-row"></div>
+    <p class="hint">Exports are exact PNGs: 1080 × 1080, 1080 × 1350, 1920 × 1080 — plus a 1080 × 1920 story size. Works fully offline — open this file in a desktop browser, no server needed.</p>
   </section>
 </main>
 <footer>
   Fan-made poster tool. Not affiliated with Rockstar Games. Fonts Anton, Bebas Neue and Pacifico are under the SIL Open Font License (see app/fonts/OFL.txt). Sample photos are original art made for this app.
 </footer>
-<script type="module" src="src/main.js"></script>
+<script type="module" src="src/ui.js"></script>
 </body>
 </html>

@@ -8,34 +8,39 @@ import { createServer } from 'node:http';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { extname, join } from 'node:path';
 
-const MIME = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.mjs': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.ttf': 'font/ttf',
-  '.txt': 'text/plain; charset=utf-8',
-};
+const TYPES = new Map([
+  ['.html', 'text/html; charset=utf-8'],
+  ['.js', 'text/javascript; charset=utf-8'],
+  ['.mjs', 'text/javascript; charset=utf-8'],
+  ['.css', 'text/css; charset=utf-8'],
+  ['.json', 'application/json; charset=utf-8'],
+  ['.png', 'image/png'],
+  ['.jpg', 'image/jpeg'],
+  ['.jpeg', 'image/jpeg'],
+  ['.ttf', 'font/ttf'],
+  ['.txt', 'text/plain; charset=utf-8'],
+]);
 
-const appDir = join(process.cwd(), 'app');
+const root = join(process.cwd(), 'app');
 const port = Number(process.argv[2] ?? 8080);
 
+function sendFile(res, file) {
+  const type = TYPES.get(extname(file).toLowerCase()) ?? 'application/octet-stream';
+  res.writeHead(200, { 'content-type': type });
+  res.end(readFileSync(file));
+}
+
 const server = createServer((req, res) => {
-  const urlPath = decodeURIComponent((req.url ?? '/').split('?')[0] ?? '/');
-  const rel = urlPath === '/' ? 'index.html' : urlPath.replace(/^\/+/, '');
-  const file = join(appDir, rel);
-  if (!file.startsWith(appDir) || !existsSync(file) || !statSync(file).isFile()) {
+  const raw = decodeURIComponent((req.url ?? '/').split('?')[0] ?? '/');
+  const rel = raw === '/' ? 'index.html' : raw.replace(/^\/+/, '');
+  const file = join(root, rel);
+  const inside = file.startsWith(root) && existsSync(file) && statSync(file).isFile();
+  if (!inside) {
     res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
     res.end('not found\n');
     return;
   }
-  const type = MIME[extname(file).toLowerCase()] ?? 'application/octet-stream';
-  res.writeHead(200, { 'content-type': type });
-  res.end(readFileSync(file));
+  sendFile(res, file);
 });
 
 server.listen(port, () => {
