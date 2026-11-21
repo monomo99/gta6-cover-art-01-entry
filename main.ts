@@ -39,6 +39,18 @@ mkdirSync(outDir, { recursive: true });
 cpSync(appDir, join(outDir, 'app'), { recursive: true });
 cpSync(shotsDir, join(outDir, 'screenshots'), { recursive: true });
 
+// Round 9 rebuild guard: the counted assets must all be present — the 3
+// OFL fonts and the 6 original samples. If any is missing the entry would
+// fail transcripts_witnessed, so fail fast here with a clear message.
+const fontNames = ['Anton-Regular.ttf', 'BebasNeue-Regular.ttf', 'Pacifico-Regular.ttf'];
+for (const name of fontNames) {
+  if (!existsSync(join(appDir, 'fonts', name))) throw new Error(`app/fonts/${name}: missing (re-download the OFL fonts)`);
+}
+const sampleNames = ['ocean-drive.jpg', 'leonida-beach.jpg', 'neon-street.jpg', 'palm-court.jpg', 'yacht-club.jpg', 'midnight-diner.jpg'];
+for (const name of sampleNames) {
+  if (!existsSync(join(appDir, 'samples', name))) throw new Error(`app/samples/${name}: missing (regenerate the samples)`);
+}
+
 const dossier = buildDossier(outDir, {
   text_max_bytes: 163840,
   screenshots: { max: 4, max_bytes: 262144 },
